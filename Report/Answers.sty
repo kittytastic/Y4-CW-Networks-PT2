@@ -1,0 +1,48 @@
+\ProvidesPackage{exam}
+% Restyle subsection numbering
+\renewcommand{\thesubsection}{\thesection.\alph{subsection}}
+\renewcommand{\thesubsubsection}{\thesubsection.\roman{subsubsection}}
+
+% General Math
+\usepackage{amsmath, amsthm, amsfonts}
+\usepackage{mathtools}
+
+
+% Figures
+\usepackage{graphicx}
+\usepackage{subcaption}
+\graphicspath{ {./Figures/} }
+
+% Theorems
+\usepackage{cleveref}
+\newtheorem{lemma}{Lemma}
+
+% General drawing
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+
+% Trees
+\usepackage{qtree}
+%\usepackage{tikz-qtree}
+
+% Psudeo code
+\usepackage{soul}
+\usepackage[ruled,vlined]{algorithm2e}
+
+% Bonus tables
+\usepackage{multirow}
+
+% Magic Space fixer
+\usepackage{xspace}
+
+% Wide table spacing fix
+\usepackage{chngpage}
+
+% Resume enumerate
+\usepackage{enumitem}
+
+% Text Colour
+\usepackage{xcolor}
+
+% Extra Commands
+\newcommand{\setbr}{;\;}
