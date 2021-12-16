@@ -24,14 +24,11 @@ def load_graph(graph_txt)->Graph:
 
 
 def tf_g_to_undirected(d_graph:Graph)->Graph:
-    u_graph = {k:set() for k in d_graph.keys()}
-
     for k, ns in d_graph.items():
         for n in ns:
-            u_graph[k].add(n)
-            u_graph[n].add(k)
+            d_graph[n].add(k)
 
-    return u_graph
+    return d_graph 
 
 
 def connected_dfs(cur_node:int, visited:Set[int], graph: Graph):
@@ -41,21 +38,27 @@ def connected_dfs(cur_node:int, visited:Set[int], graph: Graph):
             connected_dfs(n, visited, graph)
     return visited
 
+def find_largest_k(g: Graph)->Set[int]:
+    largest_k = set()
+
+    for k, ns in g.items():
+        if k%1000 == 0 and k>1:
+            print(f"{k}/{len(g)}  ({k*100/len(g):.1f})")
+        intersection = set(ns)
+        for n in ns:
+            intersection = intersection.intersection(g[n])
+
+        if len(intersection)>len(largest_k):
+            largest_k = intersection
+
+    return largest_k
+
 def generate__largest_connected_components(graph: Graph)->Set[int]:
-    nodes_to_visit = set(graph.keys())
-    largest_component = set()
-
-    while len(nodes_to_visit)>0:
-        n = next(iter(nodes_to_visit))
-        cc = connected_dfs(n, set(), graph)
-
-        if len(cc)>len(largest_component):
-            largest_component = cc
-
-        nodes_to_visit-=cc
-        print(f"Found CC len: {len(cc)}  Updated to visit: {len(nodes_to_visit)}")
-
-    return largest_component 
+    cg = create_connection_graph(graph)
+    print("P1")
+    ucg = tf_g_to_undirected(cg)
+    print("P2")
+    return find_largest_k(ucg) 
 
 def create_connection_graph(d_graph:Graph)->Graph:    
     out_dict = {}
@@ -72,8 +75,5 @@ def create_connection_graph(d_graph:Graph)->Graph:
 
 if __name__=="__main__":
     g= load_graph("./Datasets/alg_phys-cite.txt")
-    #create_connection_graph(g)
-    p1 = create_connection_graph(g)
-    print("Fin P1")
-    c_g = tf_g_to_undirected(p1)
-    print(len(generate__largest_connected_components(g)))
+    ck = generate__largest_connected_components(g)
+    print(f"Largest connected component: {len(ck)}")
