@@ -36,31 +36,40 @@ def connected_dfs(cur_node:int, visited:Set[int], graph: Graph):
     for n in graph[cur_node]:
         if n not in visited:
             connected_dfs(n, visited, graph)
-        else:
-            print("Cycle")
     return visited
 
-def find_largest_k(g: Graph)->Set[int]:
-    largest_k = set()
 
+def calc_set_weight(nodes: Set[int], weight_dict: Dict[int,int]):
+    ws = [weight_dict[n] for n in nodes]
+    return sum(ws)
+
+def find_largest_k(g: Graph, weight_dict: Dict[int,int])->Set[int]:
+    largest_k = set()
+    largest_w = 0
+
+    i=0
     for k, ns in g.items():
-        #if k%1000 == 0 and k>1:
-        print(f"{k}/{len(g)}  ({k*100/len(g):.1f})")
+        if i%1000 == 0 and i>1:
+            print(f"{i}/{len(g)}  ({i*100/len(g):.1f})")
         intersection = set(ns)
         for n in ns:
             intersection = intersection.intersection(g[n])
 
-        if len(intersection)>len(largest_k):
+        set_w = calc_set_weight(intersection, weight_dict)
+        if set_w>largest_w:
             largest_k = intersection
+            largest_w = set_w
+        
+        i+=1
 
     return largest_k
 
-def generate__largest_connected_components(graph: Graph)->Set[int]:
+def generate__largest_connected_components(graph: Graph, weight_dict: Dict[int,int])->Set[int]:
     cg = create_connection_graph(graph)
     print("P1")
     ucg = tf_g_to_undirected(cg)
     print("P2")
-    return find_largest_k(ucg) 
+    return find_largest_k(ucg, weight_dict) 
 
 def create_connection_graph(d_graph:Graph)->Graph:    
     out_dict = {}
@@ -96,8 +105,102 @@ def check_if_acyclic(graph:Graph):
         k = keys[i]
         check_if_acyclic_r(k, graph, set(), [])
 
+
+def dfs_one(n:int, visited:Set[int], stack: List[int], g:Graph):
+    visited.add(n)
+
+    for m in g[n]:
+        if m not in visited:
+            dfs_one(m, visited, stack, g)
+    
+    stack.append(n)
+    return stack
+
+def graph_transpose(g:Graph)->Graph:
+    tg = {k:set() for k in g.keys()}
+    
+    for k, v in g.items():
+        for n in v:
+            tg[n].add(k)
+
+    return tg
+
+def dfs_two(n: int, visited:Set[int], cc:Set[int], g:Graph):
+    visited.add(n)
+    cc.add(n)
+    for m in g[n]:
+        if m not in visited:
+            dfs_two(m, visited, cc, g)
+
+    return cc
+
+def find_strong_componets(g: Graph):
+    stack=[]
+    visited=set()
+
+    for v in g.keys():
+        if v not in visited:
+            dfs_one(v, visited, stack, g)
+
+    g_t = graph_transpose(g)
+
+    visited = set()
+    strong_components = []
+
+    while len(stack)>0:
+        v = stack.pop()
+        if v not in visited:
+            strong_components.append(dfs_two(v, visited, set(), g_t)) 
+
+    return strong_components
+
+def merge_nodes(g:Graph, merge_sets: List[Set[int]])-> Tuple[Graph, Dict[int, int]]:
+    new_g = {k:v for k,v in g.items()}
+    weight_dict = {k:1 for k,v in g.items()}    
+
+
+    for cs in merge_sets:
+        cs_iter = iter(cs)
+        new_node = next(cs_iter)
+        for n in cs_iter:
+            new_g[new_node].union(g[n])
+            new_g.pop(n, None)
+
+            weight_dict[new_node] += 1
+            weight_dict.pop(n)
+
+            for i in new_g.keys():
+                if n in new_g[i]:
+                    new_g[i].remove(n)
+                    new_g[i].add(new_node)
+
+    return new_g, weight_dict
+
 if __name__=="__main__":
     g= load_graph("./Datasets/alg_phys-cite.txt")
-    check_if_acyclic(g)
-    #ck = generate__largest_connected_components(g)
-    #print(f"Largest connected component: {len(ck)}")
+    '''
+    g ={ 
+         1: {2,3,4},
+         2: {1,3,4},
+         3: {2},
+         4: {1,2,3},
+         5: {6,7},
+         6: {5,7},
+         7: {5,6}
+      } 
+    '''
+
+    sc = find_strong_componets(g)
+    total_combine = 0
+    for c in sc:
+        if len(c)>1:
+            total_combine += len(c)-1
+            #print(len(c)) 
+
+    print(f"Can combine: {total_combine}   ({len(g)} -> {len(g)-total_combine})")
+    mg,weight_dict = merge_nodes(g, sc)
+    print(len(mg))
+    #check_if_acyclic(g)
+    ck = generate__largest_connected_components(mg, weight_dict)
+    print(f"Weight of largest component: {calc_set_weight(ck, weight_dict)}")
+    print(f"Largest connected component: {len(ck)}")
