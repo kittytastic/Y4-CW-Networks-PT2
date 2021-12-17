@@ -36,14 +36,16 @@ def connected_dfs(cur_node:int, visited:Set[int], graph: Graph):
     for n in graph[cur_node]:
         if n not in visited:
             connected_dfs(n, visited, graph)
+        else:
+            print("Cycle")
     return visited
 
 def find_largest_k(g: Graph)->Set[int]:
     largest_k = set()
 
     for k, ns in g.items():
-        if k%1000 == 0 and k>1:
-            print(f"{k}/{len(g)}  ({k*100/len(g):.1f})")
+        #if k%1000 == 0 and k>1:
+        print(f"{k}/{len(g)}  ({k*100/len(g):.1f})")
         intersection = set(ns)
         for n in ns:
             intersection = intersection.intersection(g[n])
@@ -73,7 +75,29 @@ def create_connection_graph(d_graph:Graph)->Graph:
     #return {k:connected_dfs(k, set(), d_graph) for k in d_graph.keys()}
     return out_dict
 
+def check_if_acyclic_r(cur_node:int, g: Graph, visited: Set[int], cs: List[int]):
+    lcs = list(cs)
+    lcs.append(cur_node)
+    visited.add(cur_node)
+    for n in g[cur_node]:
+        if n in lcs:
+            print(f"Cycle: {lcs[lcs.index(n):]}->{cur_node}->{n}")
+
+        if n not in visited:
+            check_if_acyclic_r(n, g, visited, lcs)
+        
+    return visited
+
+def check_if_acyclic(graph:Graph):    
+    keys = list(graph.keys())
+    for i in range(len(keys)):
+        if i%1000==0 and i>0:
+            print(f"{i}/{len(keys)}  ({i*100/len(keys):.1f})")
+        k = keys[i]
+        check_if_acyclic_r(k, graph, set(), [])
+
 if __name__=="__main__":
     g= load_graph("./Datasets/alg_phys-cite.txt")
-    ck = generate__largest_connected_components(g)
-    print(f"Largest connected component: {len(ck)}")
+    check_if_acyclic(g)
+    #ck = generate__largest_connected_components(g)
+    #print(f"Largest connected component: {len(ck)}")
