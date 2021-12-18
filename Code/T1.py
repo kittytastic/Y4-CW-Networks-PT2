@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple, Set, Dict
+from typing import List, Optional, Tuple, Set, Dict, Union
 
 Graph = Dict[int, Set[int]]
 
@@ -176,6 +176,54 @@ def merge_nodes(g:Graph, merge_sets: List[Set[int]])-> Tuple[Graph, Dict[int, in
 
     return new_g, weight_dict
 
+
+def longest_path_dfs(n:int, visited:Set[int], longest_pl:Dict[int, int], longest_pl_bt:Dict[int, Union[int, None]], g:Graph):
+    visited.add(n)
+
+    for m in g[n]:
+        if m not in visited:
+            longest_path_dfs(m, visited, longest_pl, longest_pl_bt, g)
+        
+        if longest_pl[n]<longest_pl[m]+1:
+            longest_pl[n] = longest_pl[m]+1
+            longest_pl_bt[n] = m
+    
+def rebuild_path(n: int, longest_pl_bt, route: List[int]):
+    route.append(n)
+    m = longest_pl_bt[n]
+    if m is None:
+        return
+    else:
+        rebuild_path(m, longest_pl_bt, route)
+
+def longest_path(g:Graph):
+    visited=set()
+    longest_pl = {k:1 for k in g.keys()} # TODO weight
+    longest_pl_bt = {k:None for k in g.keys()}
+
+    for v in g.keys():
+        if v not in visited:
+            longest_path_dfs(v, visited, longest_pl, longest_pl_bt, g)
+
+    max_pl = 0
+    max_p_start = None
+    for  n, w in longest_pl.items():
+        if max_pl<w:
+            max_pl = w
+            max_p_start = longest_pl_bt[n]
+
+    max_p = []
+    rebuild_path(max_p_start, longest_pl_bt, max_p)
+    return max_p
+
+
+def remove_self_cycles(g:Graph)->Graph:
+    for n in g.keys():
+        g[n].discard(n)
+    
+    return g
+
+
 if __name__=="__main__":
     g= load_graph("./Datasets/alg_phys-cite.txt")
     '''
@@ -200,7 +248,9 @@ if __name__=="__main__":
     print(f"Can combine: {total_combine}   ({len(g)} -> {len(g)-total_combine})")
     mg,weight_dict = merge_nodes(g, sc)
     print(len(mg))
-    #check_if_acyclic(g)
-    ck = generate__largest_connected_components(mg, weight_dict)
-    print(f"Weight of largest component: {calc_set_weight(ck, weight_dict)}")
-    print(f"Largest connected component: {len(ck)}")
+    mg = remove_self_cycles(mg)
+    #check_if_acyclic(mg)
+    #ck = generate__largest_connected_components(mg, weight_dict)
+    lp = longest_path(mg)
+    print(f"Weight of largest component: {calc_set_weight(lp, weight_dict)}")
+    print(f"Largest connected component: {len(lp)}")
