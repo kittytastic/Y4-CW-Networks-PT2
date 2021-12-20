@@ -22,89 +22,9 @@ def load_graph(graph_txt)->Graph:
     
     return answer_graph
 
-
-def tf_g_to_undirected(d_graph:Graph)->Graph:
-    for k, ns in d_graph.items():
-        for n in ns:
-            d_graph[n].add(k)
-
-    return d_graph 
-
-
-def connected_dfs(cur_node:int, visited:Set[int], graph: Graph):
-    visited.add(cur_node)
-    for n in graph[cur_node]:
-        if n not in visited:
-            connected_dfs(n, visited, graph)
-    return visited
-
-
 def calc_set_weight(nodes: Set[int], weight_dict: Dict[int,int]):
     ws = [weight_dict[n] for n in nodes]
     return sum(ws)
-
-def find_largest_k(g: Graph, weight_dict: Dict[int,int])->Set[int]:
-    largest_k = set()
-    largest_w = 0
-
-    i=0
-    for k, ns in g.items():
-        if i%1000 == 0 and i>1:
-            print(f"{i}/{len(g)}  ({i*100/len(g):.1f})")
-        intersection = set(ns)
-        for n in ns:
-            intersection = intersection.intersection(g[n])
-
-        set_w = calc_set_weight(intersection, weight_dict)
-        if set_w>largest_w:
-            largest_k = intersection
-            largest_w = set_w
-        
-        i+=1
-
-    return largest_k
-
-def generate__largest_connected_components(graph: Graph, weight_dict: Dict[int,int])->Set[int]:
-    cg = create_connection_graph(graph)
-    print("P1")
-    ucg = tf_g_to_undirected(cg)
-    print("P2")
-    return find_largest_k(ucg, weight_dict) 
-
-def create_connection_graph(d_graph:Graph)->Graph:    
-    out_dict = {}
-    keys = list(d_graph.keys())
-    for i in range(len(keys)):
-        if i%1000==0 and i>0:
-            print(f"{i}/{len(keys)}  ({i*100/len(keys):.1f})")
-        k = keys[i]
-        out_dict[k]=connected_dfs(k, set(), d_graph)
-        
-    
-    #return {k:connected_dfs(k, set(), d_graph) for k in d_graph.keys()}
-    return out_dict
-
-def check_if_acyclic_r(cur_node:int, g: Graph, visited: Set[int], cs: List[int]):
-    lcs = list(cs)
-    lcs.append(cur_node)
-    visited.add(cur_node)
-    for n in g[cur_node]:
-        if n in lcs:
-            print(f"Cycle: {lcs[lcs.index(n):]}->{cur_node}->{n}")
-
-        if n not in visited:
-            check_if_acyclic_r(n, g, visited, lcs)
-        
-    return visited
-
-def check_if_acyclic(graph:Graph):    
-    keys = list(graph.keys())
-    for i in range(len(keys)):
-        if i%1000==0 and i>0:
-            print(f"{i}/{len(keys)}  ({i*100/len(keys):.1f})")
-        k = keys[i]
-        check_if_acyclic_r(k, graph, set(), [])
-
 
 def dfs_one(n:int, visited:Set[int], stack: List[int], g:Graph):
     visited.add(n)
@@ -177,15 +97,15 @@ def merge_nodes(g:Graph, merge_sets: List[Set[int]])-> Tuple[Graph, Dict[int, in
     return new_g, weight_dict
 
 
-def longest_path_dfs(n:int, visited:Set[int], longest_pl:Dict[int, int], longest_pl_bt:Dict[int, Union[int, None]], g:Graph):
+def longest_path_dfs(n:int, visited:Set[int], longest_pl:Dict[int, int], longest_pl_bt:Dict[int, Union[int, None]], weight_dict, g:Graph):
     visited.add(n)
 
     for m in g[n]:
         if m not in visited:
-            longest_path_dfs(m, visited, longest_pl, longest_pl_bt, g)
+            longest_path_dfs(m, visited, longest_pl, longest_pl_bt, weight_dict, g)
         
-        if longest_pl[n]<longest_pl[m]+1:
-            longest_pl[n] = longest_pl[m]+1
+        if longest_pl[n]<longest_pl[m]+weight_dict[m]:
+            longest_pl[n] = longest_pl[m]+weight_dict[m]
             longest_pl_bt[n] = m
     
 def rebuild_path(n: int, longest_pl_bt, route: List[int]):
@@ -196,14 +116,14 @@ def rebuild_path(n: int, longest_pl_bt, route: List[int]):
     else:
         rebuild_path(m, longest_pl_bt, route)
 
-def longest_path(g:Graph):
+def longest_path(g:Graph, weight_dict: Dict[int, int]):
     visited=set()
-    longest_pl = {k:1 for k in g.keys()} # TODO weight
+    longest_pl = {k:weight_dict[k] for k in g.keys()} # TODO weight
     longest_pl_bt = {k:None for k in g.keys()}
 
     for v in g.keys():
         if v not in visited:
-            longest_path_dfs(v, visited, longest_pl, longest_pl_bt, g)
+            longest_path_dfs(v, visited, longest_pl, longest_pl_bt, weight_dict, g)
 
     max_pl = 0
     max_p_start = None
@@ -223,6 +143,37 @@ def remove_self_cycles(g:Graph)->Graph:
     
     return g
 
+def unmerge_nodes(nodes:Set[int], merged_nodes: List[Set[int]])->Set[int]:
+    out_set = set()
+
+    for n in nodes:
+        out_set.add(n)
+
+        for s in merged_nodes:
+            if n in s:
+                out_set = out_set.union(s)
+
+    return out_set
+
+def largest_unilateral_strong_component(g:Graph):
+    print("Finding Strong Components")
+    sc = find_strong_componets(g)
+    total_combine = 0
+    for c in sc:
+        if len(c)>1:
+            total_combine += len(c)-1
+            #print(len(c)) 
+
+    print(f"Can combine: {total_combine}   ({len(g)} -> {len(g)-total_combine})")
+    mg,weight_dict = merge_nodes(g, sc)
+    print(len(mg))
+    mg = remove_self_cycles(mg) 
+    lp = longest_path(mg, weight_dict)
+    print(f"Weight of largest component: {calc_set_weight(lp, weight_dict)}")
+    print(f"Largest connected component: {len(lp)}")
+    largest_set = unmerge_nodes(lp, sc)
+    print(f"Largest Set: {len(largest_set)}")
+    return largest_set
 
 if __name__=="__main__":
     g= load_graph("./Datasets/alg_phys-cite.txt")
@@ -238,19 +189,4 @@ if __name__=="__main__":
       } 
     '''
 
-    sc = find_strong_componets(g)
-    total_combine = 0
-    for c in sc:
-        if len(c)>1:
-            total_combine += len(c)-1
-            #print(len(c)) 
-
-    print(f"Can combine: {total_combine}   ({len(g)} -> {len(g)-total_combine})")
-    mg,weight_dict = merge_nodes(g, sc)
-    print(len(mg))
-    mg = remove_self_cycles(mg)
-    #check_if_acyclic(mg)
-    #ck = generate__largest_connected_components(mg, weight_dict)
-    lp = longest_path(mg)
-    print(f"Weight of largest component: {calc_set_weight(lp, weight_dict)}")
-    print(f"Largest connected component: {len(lp)}")
+    largest_unilateral_strong_component(g) 
