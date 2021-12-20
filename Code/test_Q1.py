@@ -1,62 +1,6 @@
 import unittest
 from T1 import *
 
-
-class TestDFS(unittest.TestCase):
-   def xtest_dfs_1(self):
-      in_g = {
-         1: {2,3,4},
-         2: {1,3,4},
-         3: {1,2,4},
-         4: {1,2,3},
-         5: {6,7},
-         6: {5,7},
-         7: {5,6}
-      } 
-      expected = {1,2,3,4}
-      print("\n\nT1")
-      self.assertEqual(expected, connected_dfs(1, set(), in_g))
-   
-   def xtest_dfs_2(self):
-      in_g = {
-         1: {2,3,4},
-         2: {1,3,4},
-         3: {2},
-         4: {1,2,3},
-         5: {6,7},
-         6: {5,7},
-         7: {5,6}
-      } 
-      expected = {1,2,3,4}
-      print("\n\nT3")
-      self.assertEqual(expected, connected_dfs(2, set(), in_g))
-   
-   def xtest_dfs_3(self):
-      in_g = {
-         1: {2,3,4},
-         2: {1,3,4},
-         3: {1,2,4},
-         4: {1,2,3},
-         5: {6,7},
-         6: {5,7},
-         7: {5,6}
-      } 
-      expected = {5,6,7}
-      print("\n\nT2")
-      self.assertEqual(expected, connected_dfs(5, set(), in_g))
-   
-   def test_dfs_4(self):
-      in_g = {
-         1: set(),
-         2: {1},
-         3: {2,4},
-         4: set(),
-      } 
-      expected = {1,2,3,4}
-      print("\n\nT4")
-      self.assertEqual(expected, connected_dfs(3, set(), in_g))
-    
-'''
 class TestLargestCCUndirected(unittest.TestCase):
    def test_dfs_1(self):
       in_g = {
@@ -69,7 +13,7 @@ class TestLargestCCUndirected(unittest.TestCase):
          7: {5,6}
       } 
       expected = {1,2,3,4}
-      self.assertEqual(expected, generate__largest_connected_components(in_g))
+      self.assertEqual(expected, largest_unilateral_strong_component(in_g))
    
    def test_dfs_2(self):
       in_g = {
@@ -82,73 +26,83 @@ class TestLargestCCUndirected(unittest.TestCase):
          7: {5,6}
       } 
       expected = {1,2,3,4,5,6,7}
-      self.assertEqual(expected, generate__largest_connected_components(in_g))
+      self.assertEqual(expected, largest_unilateral_strong_component(in_g))
 
    def test_dfs_3(self):
       in_g = {
          1: {2},
          2: {1},
-         3: {},
-         4: {},
+         3: set(),
+         4: set(),
       } 
       expected = {1,2}
-      self.assertEqual(expected, generate__largest_connected_components(in_g))
+      self.assertEqual(expected, largest_unilateral_strong_component(in_g))
 
 
 class TestLargestCCDirected(unittest.TestCase):
    def test_lccd_1(self):
       in_g = {
-         1: {},
+         1: set(),
          2: {1},
          3: {2,4},
-         4: {},
+         4: set(),
       } 
       expected = {1,2,3}
-      self.assertEqual(expected, generate__largest_connected_components(in_g))
+      self.assertEqual(expected, largest_unilateral_strong_component(in_g))
 
-class TestTfUndirected(unittest.TestCase):
-   def test_lccd_1(self):
+class TestFSC(unittest.TestCase):
+   def test_fsc_1(self):
       in_g = {
-         1: set(),
-         2: {1},
-         3: {2,4},
-         4: set(),
+         1: {2,3,4},
+         2: {1,3,4},
+         3: {1,2,4},
+         4: {1,2,3},
+         5: {6,7},
+         6: {5,7},
+         7: {5,6}
       } 
-      expected = {
-         1: {2},
-         2: {1,3},
-         3: {2,4},
-         4: {3},
-      }
-      self.assertEqual(expected, tf_g_to_undirected(in_g))
+      expected = [{5,6,7}, {1,2,3,4}]
+      self.assertEqual(expected, find_strong_componets(in_g))
 
-class TestCCG(unittest.TestCase):
-   def test_CCG_1(self):
+
+class TestMergeNodes(unittest.TestCase):
+   def test_mn_1(self):
       in_g = {
-         1: set(),
-         2: {1},
-         3: {2,4},
-         4: set(),
+         1: {2,3,4},
+         2: {1,3,4},
+         3: {1,2,4},
+         4: {1,2,3},
+         5: {6,7},
+         6: {5,7},
+         7: {5,6}
       } 
-      expected = {
+      mn = [{5,6,7}, {1,2,3,4}]
+      expected_n = {1:{1}, 5:{5}}
+      expected_w = {1: 4, 5:3}
+      self.assertEqual((expected_n, expected_w), merge_nodes(in_g, mn))
+
+class TestRemoveSelfCycles(unittest.TestCase):
+   def test_rsc_1(self):
+      in_g = {
          1: {1},
-         2: {1,2},
-         3: {1,2,3,4},
-         4: {4},
-      }
-      self.assertEqual(expected, create_connection_graph(in_g))
-
-class TestFindK(unittest.TestCase):
-   def test_find_k_1(self):
-      in_g = {
-         1: {1,2,3},
-         2: {1,2,3},
-         3: {1,2,3,4},
-         4: {3,4},
+         5: {5},
       } 
-      expected = {1,2,3}
-      self.assertEqual(expected, find_largest_k(in_g))
-'''
+      expected_n = {1:set(), 5:set()}
+      self.assertEqual(expected_n, remove_self_cycles(in_g))
+
+class TestLongestPath(unittest.TestCase):
+   def test_lp_1(self):
+      in_g = {
+         1: set(),
+         5: set(),
+      }
+      in_w = {
+         1:4,
+         5:3
+      }
+
+      expected = [1]
+      self.assertEqual(expected, longest_path(in_g, in_w))
 
 if __name__ == '__main__':
     unittest.main()

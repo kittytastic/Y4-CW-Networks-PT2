@@ -130,7 +130,7 @@ def longest_path(g:Graph, weight_dict: Dict[int, int]):
     for  n, w in longest_pl.items():
         if max_pl<w:
             max_pl = w
-            max_p_start = longest_pl_bt[n]
+            max_p_start = n
 
     max_p = []
     rebuild_path(max_p_start, longest_pl_bt, max_p)
@@ -156,23 +156,11 @@ def unmerge_nodes(nodes:Set[int], merged_nodes: List[Set[int]])->Set[int]:
     return out_set
 
 def largest_unilateral_strong_component(g:Graph):
-    print("Finding Strong Components")
     sc = find_strong_componets(g)
-    total_combine = 0
-    for c in sc:
-        if len(c)>1:
-            total_combine += len(c)-1
-            #print(len(c)) 
-
-    print(f"Can combine: {total_combine}   ({len(g)} -> {len(g)-total_combine})")
     mg,weight_dict = merge_nodes(g, sc)
-    print(len(mg))
     mg = remove_self_cycles(mg) 
     lp = longest_path(mg, weight_dict)
-    print(f"Weight of largest component: {calc_set_weight(lp, weight_dict)}")
-    print(f"Largest connected component: {len(lp)}")
     largest_set = unmerge_nodes(lp, sc)
-    print(f"Largest Set: {len(largest_set)}")
     return largest_set
 
 if __name__=="__main__":
@@ -189,4 +177,5 @@ if __name__=="__main__":
       } 
     '''
 
-    largest_unilateral_strong_component(g) 
+    lc = largest_unilateral_strong_component(g) 
+    print(len(lc))
