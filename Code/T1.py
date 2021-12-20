@@ -191,8 +191,29 @@ def normalize_distribution(dist: Dict[int, int])->Dict[int, float]:
     total = sum(dist.values())
     return {k: v/total for k,v in dist.items()}
 
-if __name__=="__main__":
-    g= load_graph("./Datasets/alg_phys-cite.txt")
 
-    lc = largest_unilateral_strong_component(g) 
-    print(len(lc))
+def Q1():
+    import matplotlib.pyplot as plt
+    
+    g = load_graph("./Datasets/alg_phys-cite.txt")
+    lc = largest_unilateral_strong_component(g)
+    print(f"Largest strong component: {len(lc)} nodes")
+    
+    in_dist = normalize_distribution(build_distribution(in_degree(lc, g)))
+    out_dist = normalize_distribution(build_distribution(out_degree(lc, g)))
+    
+    in_x, in_y = zip(*in_dist.items())
+    out_x, out_y = zip(*out_dist.items())
+
+    fig, axs = plt.subplots(1, 2, sharey=True)
+    axs[0].loglog(in_x, in_y, marker='.', linestyle="None", color='tab:blue')
+    axs[0].set_xlabel('In-Degree')
+    axs[0].set_ylabel('Normalized Rate')
+    axs[1].loglog(out_x, out_y, marker='.', linestyle="None", color='tab:orange')
+    axs[1].set_xlabel('Out-Degree')
+
+    fig.suptitle('Degree Distribution of Largest Connected Component In Citation Graph')
+    plt.savefig('Artifacts/Q1-citations.png')
+
+if __name__=="__main__":
+    Q1()
