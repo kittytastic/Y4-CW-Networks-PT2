@@ -163,19 +163,36 @@ def largest_unilateral_strong_component(g:Graph):
     largest_set = unmerge_nodes(lp, sc)
     return largest_set
 
+
+def in_degree(nodes:Set[int], g:Graph)->Dict[int,int]:
+    out_dict = {n:0 for n in nodes}
+    for n in nodes:
+        for m in nodes:
+            if n in g[m]:
+                out_dict[n]+=1
+
+    return out_dict
+
+def out_degree(nodes: Set[int], g:Graph)->Dict[int,int]:
+    return {n:len(g[n].intersection(nodes)) for n in nodes} 
+
+
+def build_distribution(observed: Dict[int,int])->Dict[int,int]:
+    out_dict = {}
+    for c in observed.values():
+        if c in out_dict:
+            out_dict[c]+=1
+        else:
+            out_dict[c]=1
+
+    return out_dict
+
+def normalize_distribution(dist: Dict[int, int])->Dict[int, float]:
+    total = sum(dist.values())
+    return {k: v/total for k,v in dist.items()}
+
 if __name__=="__main__":
     g= load_graph("./Datasets/alg_phys-cite.txt")
-    '''
-    g ={ 
-         1: {2,3,4},
-         2: {1,3,4},
-         3: {2},
-         4: {1,2,3},
-         5: {6,7},
-         6: {5,7},
-         7: {5,6}
-      } 
-    '''
 
     lc = largest_unilateral_strong_component(g) 
     print(len(lc))
