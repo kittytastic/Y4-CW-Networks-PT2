@@ -1,20 +1,27 @@
 from typing import Set
 from Utils import *
 import random
+import math
 
 class PATrial:
     def __init__(self, num_nodes:int):
         self._num_nodes = num_nodes 
         self._node_ballot = [node for node in range(num_nodes) for _ in range(num_nodes)]
+        self._out_ballot = {n:num_nodes for n in range(num_nodes)}
 
     def run_trial(self, num_nodes:int)->Set[int]:
+        num_nodes = random.choice(list(self._out_ballot.values()))
 
         new_neighbors = set()
         for _ in range(num_nodes):
-            new_neighbors.add(random.choice(self._node_ballot))
-       
+            nn = random.choice(self._node_ballot)
+            if nn not in new_neighbors:
+                self._out_ballot[nn]+=1
+            new_neighbors.add(nn)
+               
         self._node_ballot.extend(list(new_neighbors))
         self._node_ballot.append(self._num_nodes)
+        self._out_ballot[self._num_nodes] = 0 
 
         self._num_nodes += 1
         return new_neighbors
@@ -40,6 +47,6 @@ def make_PA_Graph(total_nodes, out_degree:int)->Graph:
 
 
 if __name__=="__main__":
-    g = make_PA_Graph(7000,50)
+    g = make_PA_Graph(7000,10)
     plot_degree(g, 'Q2')
 
