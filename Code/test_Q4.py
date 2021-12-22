@@ -61,5 +61,25 @@ class TestClosnessCentrality(unittest.TestCase):
         expected = {1: 1/28, 2: 1/28, 3: 1/28, 4:1/18, 5:1/28, 6:1/16, 7:1/24, 8:1/23, 9:1/23, 10:1/22, 11:1/22, 12:1/32}
         self.assertEqual(expected, closeness_centrality(in_g)) 
 
+
+class TestNearnessCentrality(unittest.TestCase):
+    def test_nc_1(self):
+        in_g = {1: {2}, 2:{1,3}, 3: {2}}
+
+        expected = {1: 1+1/2, 2: 1+1, 3:1+1/2}
+        self.assertEqual(expected, nearness_centrality(in_g)) 
+    
+    def test_nc_2(self):
+        in_g = dict(example_g) 
+
+        expected = {
+            1: 1+ 4*1/2 +5*1/3 + 1/4,
+            7: 3+3*1/2+5*1/3,
+            11: 4+3*1/2+4*1/3}
+        ans = nearness_centrality(in_g)
+
+        for k in expected:
+            self.assertAlmostEqual(expected[k], ans[k], msg=f"Key {k} failed") 
+
 if __name__ == '__main__':
     unittest.main()
