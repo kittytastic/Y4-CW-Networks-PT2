@@ -1,4 +1,6 @@
+from typing import List, Optional, Tuple, Set, Dict, Union
 from Utils import Graph
+import heapq
 
 def load_london(file_name)->Graph:
     g = {}
@@ -88,8 +90,31 @@ def load_ccsb_y2h(file_name:str)->Graph:
     return g
 
                 
+def dijkstras(start_node:int, g:Graph)->Dict[int, int]:
+    out_dict = {}
+    possible_weights: List[Tuple(int, int)] = [(0, start_node)]
+    left_to_visit = set(g.keys())
 
+    while len(left_to_visit)>0:
+        if len(possible_weights)==0:
+            raise Exception("Graph is not connected")
 
+        node_d, next_node = heapq.heappop(possible_weights)
+
+        if next_node not in left_to_visit:
+            continue
+        
+        left_to_visit.remove(next_node)
+        out_dict[next_node] = node_d
+
+        neighbors = [(node_d+1, n) for n in g[next_node] if n in left_to_visit]
+        for n in neighbors:
+            heapq.heappush(possible_weights, n)
+        
+    return out_dict
+
+def min_path_dict(g:Graph)->Dict[int, Dict[int,int]]:
+    return {n: dijkstras(n,g) for n in g.keys()}
 
 if __name__ == "__main__":
     #lg, _ = load_london("Datasets/london_transport_raw.edges.txt")
