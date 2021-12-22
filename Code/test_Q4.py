@@ -31,6 +31,13 @@ class TestDijkstra(unittest.TestCase):
 
         expected = {1: 3, 2:3, 3:3, 4:2, 5:3, 6:1, 7:1, 8:1, 9:2, 10:1, 11:0, 12:2}
         self.assertEqual(expected, dijkstras(start_node, in_g))
+    
+    def test_D_3(self):
+        in_g = dict(example_g)
+        start_node = 7
+
+        expected = {1: 3, 2:3, 3:3, 4:2, 5:3, 6:1, 7:0, 8:1, 9:2, 10:2, 11:1, 12:3}
+        self.assertEqual(expected, dijkstras(start_node, in_g))
 
 class TestMinPath(unittest.TestCase):
     def test_mp_1(self):
@@ -41,7 +48,18 @@ class TestMinPath(unittest.TestCase):
         for k in ans.keys():
             self.assertEqual(ans[k], expected[k]) 
     
+class TestClosnessCentrality(unittest.TestCase):
+    def test_cc_1(self):
+        in_g = {1: {2}, 2:{1,3}, 3: {2}}
 
+        expected = {1: 1/3, 2: 1/2, 3:1/3}
+        self.assertEqual(expected, closeness_centrality(in_g)) 
+
+    def test_cc_2(self):
+        in_g = dict(example_g) 
+
+        expected = {1: 1/28, 2: 1/28, 3: 1/28, 4:1/18, 5:1/28, 6:1/16, 7:1/24, 8:1/23, 9:1/23, 10:1/22, 11:1/22, 12:1/32}
+        self.assertEqual(expected, closeness_centrality(in_g)) 
 
 if __name__ == '__main__':
     unittest.main()

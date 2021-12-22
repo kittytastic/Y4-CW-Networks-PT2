@@ -116,6 +116,10 @@ def dijkstras(start_node:int, g:Graph)->Dict[int, int]:
 def min_path_dict(g:Graph)->Dict[int, Dict[int,int]]:
     return {n: dijkstras(n,g) for n in g.keys()}
 
+def closeness_centrality(g:Graph)->Dict[int, float]:
+    min_path = min_path_dict(g)
+    return {n: 1/sum(min_path[n].values()) for n in g.keys()}
+
 if __name__ == "__main__":
     #lg, _ = load_london("Datasets/london_transport_raw.edges.txt")
     rg = load_roget("Datasets/Roget.txt")
