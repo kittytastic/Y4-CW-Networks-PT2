@@ -81,5 +81,38 @@ class TestNearnessCentrality(unittest.TestCase):
         for k in expected:
             self.assertAlmostEqual(expected[k], ans[k], msg=f"Key {k} failed") 
 
+
+class TestDegreeCentrality(unittest.TestCase):
+    def test_dc_1(self):
+        in_g = {1: {2}, 2:{1,3}, 3: {2}}
+
+        expected = {1: 1, 2: 2, 3:1}
+        self.assertEqual(expected, degree_centrality(in_g)) 
+
+    def test_dc_2(self):
+        in_g = dict(example_g) 
+
+        expected = {1:1, 2:1, 3:1, 4:5, 5:1, 6:6, 7:3, 8:4, 9:3, 10:4, 11:4, 12:1}
+        self.assertEqual(expected, degree_centrality(in_g)) 
+
+class TestAdjacencyCentrality(unittest.TestCase):
+    def xtest_ac_1(self):
+        in_g = {1: {2}, 2:{1,3}, 3: {2}}
+
+        expected = {1: -1/3, 2: 2*1/3*1/2, 3:-1/3}
+        self.assertEqual(expected, adjacency_centrality(in_g)) 
+    
+    def test_ac_2(self):
+        in_g = dict(example_g) 
+
+        expected = {
+           4: 1/5*(4*4/6 + -1/11),
+           1: -4/6
+           }
+        ans = adjacency_centrality(in_g)
+
+        for k in expected:
+            self.assertAlmostEqual(expected[k], ans[k], msg=f"Key {k} failed") 
+
 if __name__ == '__main__':
     unittest.main()

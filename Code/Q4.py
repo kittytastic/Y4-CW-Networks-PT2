@@ -127,6 +127,19 @@ def nearness_centrality(g: Graph)->Dict[int, float]:
             for n in g.keys()
         }
 
+def degree_centrality(g: Graph)->Dict[int, int]:
+    return {n: len(v) for n,v in g.items()}
+
+def adjacency_centrality(g: Graph)->Dict[int, int]:
+    d = degree_centrality(g)
+    out_dir = {}
+    for j in g.keys():
+        x = sum([(d[j]-d[i])/(d[j]+d[i]) for i in g[j] if i!=j])
+        x *= 1/d[j]
+        out_dir[j]=x
+
+    return out_dir
+
 if __name__ == "__main__":
     #lg, _ = load_london("Datasets/london_transport_raw.edges.txt")
     rg = load_roget("Datasets/Roget.txt")
