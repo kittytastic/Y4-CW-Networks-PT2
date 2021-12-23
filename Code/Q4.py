@@ -1,37 +1,32 @@
 from typing import List, Optional, Tuple, Set, Dict, Union
-from Utils import Graph
+from Utils import Graph, find_strong_componets
 import heapq
 
 def load_london(file_name)->Graph:
     g = {}
     station_id_map = {}
-    id_station_map = {}
     next_station_id = 0
 
     with open(file_name) as f:
         lines = f.readlines()
 
         for l in lines:
-            segments = l.split(" ")
+            segments = l.split()
             if len(segments)==0:
                 continue
 
             for s in segments[1:]:
                 if s not in station_id_map:
                     station_id_map[s]=next_station_id
-                    id_station_map[next_station_id]=s
+                    g[next_station_id] = set()
                     next_station_id +=1
-
-                if s not in g:
-                    g[station_id_map[s]] = set()
 
                             
             a, b = station_id_map[segments[1]], station_id_map[segments[2]]
             g[a].add(b)
             g[b].add(a)
 
-    print(f"Loaded London dataset: {len(g)} nodes")
-    return g, id_station_map
+    return g, {v:k for k,v in station_id_map.items()}
 
 def load_roget(file_name: str)->Graph:
     g = {}
@@ -59,8 +54,7 @@ def load_roget(file_name: str)->Graph:
                         g[n].add(m)
                         g[m].add(n)            
     
-    print(f"Loaded Roget dataset: {len(g)} nodes")
-    return g
+    return g, {k:k for k in g.keys()}
 
 def load_ccsb_y2h(file_name:str)->Graph:
     g = {}
@@ -76,18 +70,15 @@ def load_ccsb_y2h(file_name:str)->Graph:
             for c in segments[:2]:
                 if c not in name_id_map:
                     name_id_map[c]=next_id
-                    next_id +=1
-
-                if c not in g:
-                    g[name_id_map[c]] = set()
+                    g[next_id] = set()
+                    next_id +=1 
 
                             
             a, b = name_id_map[segments[0]], name_id_map[segments[1]]
             g[a].add(b)
             g[b].add(a)
         
-    print(f"Loaded CCSB-Y2H: {len(g)} nodes")
-    return g
+    return g, {v:k for k,v in name_id_map.items()}
 
                 
 def dijkstras(start_node:int, g:Graph)->Dict[int, int]:
@@ -140,9 +131,34 @@ def adjacency_centrality(g: Graph)->Dict[int, int]:
 
     return out_dir
 
-if __name__ == "__main__":
-    #lg, _ = load_london("Datasets/london_transport_raw.edges.txt")
-    rg = load_roget("Datasets/Roget.txt")
-    cg = load_ccsb_y2h("Datasets/CCSB-Y2H.txt")
 
+def strip_graph(g:Graph, nodes:Set[int])->Graph:
+    return {n: g[n].intersection(nodes) for n in nodes}
+
+
+def strip_to_largest_connected(g: Graph)->Graph:
+    sc = find_strong_componets(g)
+    largest_set = set()
+    for s in sc:
+        if len(s)>len(largest_set):
+            largest_set = s
+
+    return strip_graph(g, largest_set)    
+
+
+if __name__ == "__main__":
+    lg, lg_map = load_london("Datasets/london_transport_raw.edges.txt")
+    lg = strip_to_largest_connected(lg)
+    print(f"Loaded London dataset: {len(g)} nodes")
+    print(f"London (strip) {len(lg)}")
+    
+    exit()
+    rg, rg_map = load_roget("Datasets/Roget.txt")
+    rg = strip_to_largest_connected(rg)
+    print(f"Loaded Roget dataset: {len(g)} nodes")
+    print(f"Roget (strip) {len(rg)}")
+    cg, cg_map = load_ccsb_y2h("Datasets/CCSB-Y2H.txt")
+    cg = strip_to_largest_connected(cg)
+    print(f"Loaded CCSB-Y2H: {len(g)} nodes")
+    print(f"CCSB-Y2H (strip) {len(cg)}")
 

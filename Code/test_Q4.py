@@ -114,5 +114,114 @@ class TestAdjacencyCentrality(unittest.TestCase):
         for k in expected:
             self.assertAlmostEqual(expected[k], ans[k], msg=f"Key {k} failed") 
 
+class TestStripToLargestConnected(unittest.TestCase):
+   def test_slc_1(self):
+      in_g = {
+         1: {2,3,4},
+         2: {1,3,4},
+         3: {1,2,4},
+         4: {1,2,3},
+         5: {6,7},
+         6: {5,7},
+         7: {5,6}
+      } 
+      expected = {1:{2,3,4},2:{1,3,4},3:{1,2,4},4:{1,2,3}}
+      self.assertEqual(expected, strip_to_largest_connected(in_g))
+
+
+class TestLoadLondon(unittest.TestCase):
+    def test_ll_1(self):
+      lg, lg_map = load_london("Datasets/london_debug.txt")
+      
+      know_pairs = [
+            ("harrow&wealdstone", "kenton"),
+            ("queenspark", "kilburnpark"),
+            ("kenton", "southkenton"),
+            ("southkenton", "northwembley"),
+            ("northwembley", "wembleycentral"),
+            ("wembleycentral", "stonebridgepark"),
+            ("stonebridgepark", "harlesden"),
+            ("harlesden", "willesdenjunction"),
+            ("willesdenjunction", "kensalgreen"),
+            ("kensalgreen", "queenspark")
+      ]
+
+      back_map = {v:k for k,v in lg_map.items()}
+      for a, b in know_pairs:
+        aa = back_map[a]
+        bb = back_map[b]      
+        self.assertIn(aa, lg[bb], msg=f"Failed {a} (id: {aa}) in {b} (id: {bb})")
+        self.assertIn(bb, lg[aa], msg=f"Failed {b} (id: {bb}) in {a} (id: {aa})")
+    
+    def test_ll_1(self):
+      lg, lg_map = load_london("Datasets/london_transport_raw.edges.txt")
+      
+      know_pairs = [
+            ("harrow&wealdstone", "kenton"),
+            ("queenspark", "kilburnpark"),
+            ("kenton", "southkenton"),
+            ("southkenton", "northwembley"),
+            ("eastindia", "canningtown"),
+            ("bank", "shadwell"),
+            ("westferry", "westindiaquay"),
+      ]
+
+      back_map = {v:k for k,v in lg_map.items()}
+      for a, b in know_pairs:
+        aa = back_map[a]
+        bb = back_map[b]      
+        self.assertIn(aa, lg[bb], msg=f"Failed {a} (id: {aa}) in {b} (id: {bb})")
+        self.assertIn(bb, lg[aa], msg=f"Failed {b} (id: {bb}) in {a} (id: {aa})")
+
+
+class TestLoadRoget(unittest.TestCase):
+   def test_lr_1(self):
+      rg, rg_map = load_roget("Datasets/Roget.txt")
+      
+      know_pairs = [
+          (1,2),
+          (2,1),
+          (1,527),
+          (527,1),
+          
+          (1020, 371),
+          (371, 1020),
+          (1020, 1017),
+          (1017, 1020),
+
+          (1021,232),
+          (232,1021),
+
+      ]
+
+      back_map = {v:k for k,v in rg_map.items()}
+      for a, b in know_pairs:
+        aa = back_map[a]
+        bb = back_map[b]      
+        self.assertIn(aa, rg[bb], msg=f"Failed {a} (id: {aa}) in {b} (id: {bb})")
+        self.assertIn(bb, rg[aa], msg=f"Failed {b} (id: {bb}) in {a} (id: {aa})")
+
+
+class TestLoadCCSB(unittest.TestCase):
+   def test_cc_1(self):
+        cg, cg_map = load_ccsb_y2h("Datasets/CCSB-Y2H.txt")
+      
+        know_pairs = [
+            ("YLR291C", "YNL229C"),
+            ("YLR291C", "YCR086W"),
+            ("YLR291C", "YPR062W"),
+
+            ("YML051W", "YPL047W"),
+            ("YML051W", "YKL015W"),
+            ("YNL189W", "YOR229W"),
+      ]
+
+        back_map = {v:k for k,v in cg_map.items()}
+        for a, b in know_pairs:
+            aa = back_map[a]
+            bb = back_map[b]      
+            self.assertIn(aa, cg[bb], msg=f"Failed {a} (id: {aa}) in {b} (id: {bb})")
+            self.assertIn(bb, cg[aa], msg=f"Failed {b} (id: {bb}) in {a} (id: {aa})")
+
 if __name__ == '__main__':
     unittest.main()

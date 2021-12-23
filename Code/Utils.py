@@ -71,3 +71,52 @@ def plot_degree(g, file_name, title="Unnamed", node_subset = None):
 
     fig.suptitle(title)
     plt.savefig(f'Artifacts/{file_name}.png')
+
+
+def _dfs_one(n:int, visited:Set[int], stack: List[int], g:Graph):
+    visited.add(n)
+
+    for m in g[n]:
+        if m not in visited:
+            _dfs_one(m, visited, stack, g)
+    
+    stack.append(n)
+    return stack
+
+def _graph_transpose(g:Graph)->Graph:
+    tg = {k:set() for k in g.keys()}
+    
+    for k, v in g.items():
+        for n in v:
+            tg[n].add(k)
+
+    return tg
+
+def _dfs_two(n: int, visited:Set[int], cc:Set[int], g:Graph):
+    visited.add(n)
+    cc.add(n)
+    for m in g[n]:
+        if m not in visited:
+            _dfs_two(m, visited, cc, g)
+
+    return cc
+
+def find_strong_componets(g: Graph):
+    stack=[]
+    visited=set()
+
+    for v in g.keys():
+        if v not in visited:
+            _dfs_one(v, visited, stack, g)
+
+    g_t = _graph_transpose(g)
+
+    visited = set()
+    strong_components = []
+
+    while len(stack)>0:
+        v = stack.pop()
+        if v not in visited:
+            strong_components.append(_dfs_two(v, visited, set(), g_t)) 
+
+    return strong_components
