@@ -96,7 +96,7 @@ class TestDegreeCentrality(unittest.TestCase):
         self.assertEqual(expected, degree_centrality(in_g)) 
 
 class TestAdjacencyCentrality(unittest.TestCase):
-    def xtest_ac_1(self):
+    def test_ac_1(self):
         in_g = {1: {2}, 2:{1,3}, 3: {2}}
 
         expected = {1: -1/3, 2: 2*1/3*1/2, 3:-1/3}
@@ -223,5 +223,34 @@ class TestLoadCCSB(unittest.TestCase):
             self.assertIn(aa, cg[bb], msg=f"Failed {a} (id: {aa}) in {b} (id: {bb})")
             self.assertIn(bb, cg[aa], msg=f"Failed {b} (id: {bb}) in {a} (id: {aa})")
 
+
+class TestGetBest(unittest.TestCase):
+    def test_gb_1(self):
+        in_g = {3: 10, 7: 20, 1: 30}
+        in_dict = {3: "one", 7: "two", 1:"three"}
+
+        expected = [("one", 10), ("two", 20)]
+        self.assertEqual(expected, get_best(in_g, in_dict, top_count=2)) 
+    
+    def test_gb_2(self):
+        in_g = {3: 10, 1: 30, 7:10}
+        in_dict = {3: "one", 7: "two", 1:"three"}
+
+        expected = [("one", 10), ("two", 10)]
+        self.assertEqual(expected, get_best(in_g, in_dict, top_count=1)) 
+    
+    def test_gb_3(self):
+        in_g = {3: 10, 1: 30, 7:20}
+        in_dict = {3: "one", 7: "two", 1:"three"}
+
+        expected = [("three", 30), ("two", 20)]
+        self.assertEqual(expected, get_best(in_g, in_dict, top_count=2, smallest=True)) 
+    
+    def test_gb_4(self):
+        in_g = {3: 10, 7: 10, 1: 30}
+        in_dict = {3: "one", 7: "two", 1:"three"}
+
+        expected = [("three", 30), ("one", 10), ("two", 10)]
+        self.assertEqual(expected, get_best(in_g, in_dict, top_count=2, smallest=True)) 
 if __name__ == '__main__':
     unittest.main()

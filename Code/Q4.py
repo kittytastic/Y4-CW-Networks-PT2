@@ -1,6 +1,8 @@
-from typing import List, Optional, Tuple, Set, Dict, Union
+from typing import List, Optional, Tuple, Set, Dict, Union, Any
+
 from Utils import Graph, find_strong_componets
 import heapq
+import math
 
 def load_london(file_name)->Graph:
     g = {}
@@ -145,20 +147,67 @@ def strip_to_largest_connected(g: Graph)->Graph:
 
     return strip_graph(g, largest_set)    
 
+def get_best(d: Dict[int, float], name_map: Dict[int, Any],  top_count:int=20, smallest=False):
+    to_sort = [(name_map[k], v) for k,v in d.items()]
+    sorted_l = sorted(to_sort, key=lambda x: x[1], reverse=(not smallest))
+
+    top_part = sorted_l[:top_count]
+    last_v = top_part[-1][1]
+    for i in range(top_count, len(to_sort)):
+        if math.isclose(sorted_l[i][1], last_v):
+            top_part.append(sorted_l[i])
+        else:
+            break
+
+    return top_part 
+
+def flatten(t):
+    width = len(t)
+    max_table_l = max([len(x) for x in t])
+
+    out_t = []
+    for i in range(max_table_l):
+        row = []
+        for j in range(width):
+            sec = t[j]
+            if i<len(sec):
+                row.append(sec[i][0])
+                row.append(sec[i][1])
+            else:
+                row.append(None)
+                row.append(None)
+
+        out_t.append(tuple(row))
+    
+    return out_t
+
+
+
+def generate_table(g: Graph, g_map: Dict[int, Any]):
+    from tabulate import tabulate
+    metrics = [closeness_centrality, nearness_centrality, degree_centrality, adjacency_centrality]
+
+    table = [get_best(m(g), g_map, top_count=20) for m in metrics]
+    print(table)
+    print()
+    table=flatten(table)
+    print(tabulate(table, floatfmt=".3g", tablefmt="latex"))
 
 if __name__ == "__main__":
     lg, lg_map = load_london("Datasets/london_transport_raw.edges.txt")
     lg = strip_to_largest_connected(lg)
-    print(f"Loaded London dataset: {len(g)} nodes")
+    print(f"Loaded London dataset: {len(lg)} nodes")
     print(f"London (strip) {len(lg)}")
-    
+    generate_table(lg, lg_map)
     exit()
+    
     rg, rg_map = load_roget("Datasets/Roget.txt")
     rg = strip_to_largest_connected(rg)
-    print(f"Loaded Roget dataset: {len(g)} nodes")
+    print(f"Loaded Roget dataset: {len(rg)} nodes")
     print(f"Roget (strip) {len(rg)}")
+    
     cg, cg_map = load_ccsb_y2h("Datasets/CCSB-Y2H.txt")
     cg = strip_to_largest_connected(cg)
-    print(f"Loaded CCSB-Y2H: {len(g)} nodes")
+    print(f"Loaded CCSB-Y2H: {len(cg)} nodes")
     print(f"CCSB-Y2H (strip) {len(cg)}")
 
