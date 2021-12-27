@@ -3,8 +3,8 @@ from typing import Callable, Iterable, List, Optional, Tuple, Set, Dict, Union, 
 from enum import Enum
 import random
 import numpy as np
-from numpy.random.mtrand import rand
-
+import matplotlib.pyplot as plt
+import sys
 
 Node = int
 Population = Dict['State', Set[Node]]
@@ -38,7 +38,7 @@ def add_to_metrics(m: Metrics, pop: Population)->Metrics:
     return m
 
 def random_vaccine(_: Graph, pop: Population, num: int)->Set[Node]:
-    return set(random.sample(tuple(pop[State.S]), num))
+    return set(random.sample(tuple(pop[State.S]), min(num, len(pop[State.S]))))
 
 def simulate(g:Graph, t: Transitions, ti: int, vaccine_strat:VaccinationStrategy = random_vaccine, rand_seed:int = 42, start_infected:int=5)->Metrics:
     random.seed(rand_seed)
@@ -55,7 +55,9 @@ def simulate(g:Graph, t: Transitions, ti: int, vaccine_strat:VaccinationStrategy
     infection_tracker:Dict[Node,int] = {p: ti for p in initial_infected}
     metrics = add_to_metrics(metrics, pop)
 
+
     while len(pop[State.S])>0 or len(pop[State.I])>0 or len(pop[State.VI])>0:
+       
         # Deal with new vaccines
         to_vaccinate = vaccine_strat(g, pop, 400)
         pop[State.S]-=to_vaccinate
@@ -88,9 +90,9 @@ def simulate(g:Graph, t: Transitions, ti: int, vaccine_strat:VaccinationStrategy
             if infection_tracker[p]==0:
                 new_R.add(p)
         
-        for r in infection_tracker.keys():
+        for r in new_R:
             infection_tracker.pop(r)
-
+        
         pop[State.VI]-=new_R
         pop[State.I]-=new_R
         pop[State.R] = pop[State.R].union(new_R)
@@ -122,7 +124,11 @@ def poisson(n: int, m: int)->List[int]:
     return list(dist)
 
 
-def VDWS(n: int, m: int, rewire_prob: float)->Graph:
+def VDWS(n: int, m: int, rewire_prob: float, seed:Optional[int] = None)->Graph:
+    if seed is None:
+        seed = random.randrange(sys.maxsize)
+    rng = random.Random(seed)
+
     g:Graph = {i:set() for i in range(n)}
     local_degrees = poisson(n,m)
 
@@ -138,19 +144,45 @@ def VDWS(n: int, m: int, rewire_prob: float)->Graph:
             if (i,j) in rewired_edges:
                 continue
                 
-            p = random.random()
+            p = rng.random()
             if p < rewire_prob:
-                v = random.randint(0,n-1)
+                v = rng.randint(0,n-1)
                 if v!=i and v not in g[i]:
                     g[i].remove(j)
-                    g[j].remove(i)
+                    try:
+                        g[j].remove(i) # KEY NOT FOUND n=2000, n = 25, p = 0.01
+                    except:
+                        raise Exception(f"Had the bug n={n} m={m} p={rewire_prob} seed={seed}")
                     g[i].add(v)
                     g[v].add(i)
                     rewired_edges.add((i,v))
                     rewired_edges.add((v,i))
-                
+
+    # n=2000 m=25 p=0.01 seed=6045864868872399818 
     return g
 
+def graph_metrics(metrics:Metrics, name:str="tmp-T3"):
+    total_I = [metrics[State.I][i]+metrics[State.VI][i] for i in range(len(metrics[State.I]))]
+
+    fig, axs = plt.subplots(2, 3, sharex=True, sharey=True)
+    axs[0, 0].plot(metrics[State.S], 'tab:blue')
+    axs[0, 0].set_title('Susceptible (S)')
+    axs[0, 1].plot(metrics[State.V], 'tab:orange')
+    axs[0, 1].set_title('Vaccinated (V)')
+    axs[0, 2].plot(metrics[State.R], 'tab:green')
+    axs[0, 2].set_title('Recovered (R)')
+    
+    axs[1, 0].plot(metrics[State.I], 'tab:red')
+    axs[1, 0].set_title('Infected (I)')
+    axs[1, 1].plot(metrics[State.VI], 'tab:red')
+    axs[1, 1].set_title('Vac. & Infected (VI)')
+    axs[1, 2].plot(total_I, 'tab:red')
+    axs[1, 2].set_title('Total Infected (I+VI)')
+    
+    fig.supxlabel('Simulation Steps')
+    fig.supylabel('Number of People')
+
+    plt.savefig(f'Artifacts/{name}.png')
 
 if __name__ == "__main__":
     transmition_p:Transitions = {
@@ -162,9 +194,8 @@ if __name__ == "__main__":
 
     t_i = 2
 
-    print()
-   
-    
-    verify_prob_dict(transmition_p)
+    g = VDWS(20000, 25, 0.01)
+    metrics = simulate(g, transmition_p, t_i)
+    graph_metrics(metrics)
 
 
