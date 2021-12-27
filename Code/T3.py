@@ -2,6 +2,9 @@
 from typing import Callable, Iterable, List, Optional, Tuple, Set, Dict, Union, Any
 from enum import Enum
 import random
+import numpy as np
+from numpy.random.mtrand import rand
+
 
 Node = int
 Population = Dict['State', Set[Node]]
@@ -106,6 +109,47 @@ def simulate(g:Graph, t: Transitions, ti: int, vaccine_strat:VaccinationStrategy
 
     return metrics
 
+def poisson(n: int, m: int)->List[int]:
+    dist:Any = np.zeros(n, dtype='int') #type:ignore
+
+    filled = 0
+    while filled!=n:
+        new_dist:Any = np.random.poisson(m,n-filled) #type:ignore
+        new_dist = new_dist[new_dist>0]
+        dist[filled:filled+len(new_dist)] = new_dist # type:ignore
+        filled+=len(new_dist)
+
+    return list(dist)
+
+
+def VDWS(n: int, m: int, rewire_prob: float)->Graph:
+    g:Graph = {i:set() for i in range(n)}
+    local_degrees = poisson(n,m)
+
+    for i in range(n):
+        for j in range(-local_degrees[i], local_degrees[i]+1):
+            v = j % n
+            g[i].add(v)
+            g[v].add(i)
+
+    rewired_edges:Set[Tuple[Node, Node]] = set()
+    for i in range(n):
+        for j in g[i]:
+            if (i,j) in rewired_edges:
+                continue
+                
+            p = random.random()
+            if p < rewire_prob:
+                v = random.randint(0,n-1)
+                if v!=i and v not in g[i]:
+                    g[i].remove(j)
+                    g[j].remove(i)
+                    g[i].add(v)
+                    g[v].add(i)
+                    rewired_edges.add((i,v))
+                    rewired_edges.add((v,i))
+                
+    return g
 
 
 if __name__ == "__main__":
