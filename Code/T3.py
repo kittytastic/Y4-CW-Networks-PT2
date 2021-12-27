@@ -40,7 +40,15 @@ def add_to_metrics(m: Metrics, pop: Population)->Metrics:
 def random_vaccine(_: Graph, pop: Population, num: int)->Set[Node]:
     return set(random.sample(tuple(pop[State.S]), min(num, len(pop[State.S]))))
 
-def simulate(g:Graph, t: Transitions, ti: int, vaccine_strat:VaccinationStrategy = random_vaccine, rand_seed:int = 42, start_infected:int=5)->Metrics:
+def simulate(
+    g:Graph,
+    t: Transitions,
+    ti: int, 
+    vaccine_strategy:VaccinationStrategy = random_vaccine, 
+    vaccines_start:int=50,
+    start_infected:int=5,
+    rand_seed:int = 42
+    )->Metrics:
     random.seed(rand_seed)
 
     metrics:Metrics = {s:[] for s in State} 
@@ -55,13 +63,13 @@ def simulate(g:Graph, t: Transitions, ti: int, vaccine_strat:VaccinationStrategy
     infection_tracker:Dict[Node,int] = {p: ti for p in initial_infected}
     metrics = add_to_metrics(metrics, pop)
 
-
+    time=1
     while len(pop[State.S])>0 or len(pop[State.I])>0 or len(pop[State.VI])>0:
-       
-        # Deal with new vaccines
-        to_vaccinate = vaccine_strat(g, pop, 400)
-        pop[State.S]-=to_vaccinate
-        pop[State.V] = pop[State.V].union(to_vaccinate)
+        if time>vaccines_start:    
+            # Deal with new vaccines
+            to_vaccinate = vaccine_strategy(g, pop, 400)
+            pop[State.S]-=to_vaccinate
+            pop[State.V] = pop[State.V].union(to_vaccinate)
 
         # Work out new infections
         new_I:Set[Node] = set()
@@ -108,6 +116,7 @@ def simulate(g:Graph, t: Transitions, ti: int, vaccine_strat:VaccinationStrategy
             infection_tracker[i] = ti
 
         metrics = add_to_metrics(metrics, pop)
+        time += 1
 
     return metrics
 
@@ -126,8 +135,9 @@ def poisson(n: int, m: int)->List[int]:
 
 def VDWS(n: int, m: int, rewire_prob: float, seed:Optional[int] = None)->Graph:
     if seed is None:
-        seed = random.randrange(sys.maxsize)
+        seed = random.randrange(2**32 - 1)
     rng = random.Random(seed)
+    np.random.seed(seed)
 
     g:Graph = {i:set() for i in range(n)}
     local_degrees = poisson(n,m)
@@ -150,7 +160,7 @@ def VDWS(n: int, m: int, rewire_prob: float, seed:Optional[int] = None)->Graph:
                 if v!=i and v not in g[i]:
                     g[i].remove(j)
                     try:
-                        g[j].remove(i) # KEY NOT FOUND n=2000, n = 25, p = 0.01
+                        g[j].remove(i) 
                     except:
                         raise Exception(f"Had the bug n={n} m={m} p={rewire_prob} seed={seed}")
                     g[i].add(v)
@@ -158,7 +168,6 @@ def VDWS(n: int, m: int, rewire_prob: float, seed:Optional[int] = None)->Graph:
                     rewired_edges.add((i,v))
                     rewired_edges.add((v,i))
 
-    # n=2000 m=25 p=0.01 seed=6045864868872399818 
     return g
 
 def graph_metrics(metrics:Metrics, name:str="tmp-T3"):
@@ -194,8 +203,16 @@ if __name__ == "__main__":
 
     t_i = 2
 
-    g = VDWS(20000, 25, 0.01)
-    metrics = simulate(g, transmition_p, t_i)
-    graph_metrics(metrics)
+    #g = VDWS(20, 25, 0.01)
+    #metrics = simulate(g, transmition_p, t_i)
+    #graph_metrics(metrics)
+
+    to = 1000000
+    step = to/100
+    for i in range(to):
+        if i%step==0:
+            print(f"{i}/{to} ({i*100/to}%)")
+        
+        g = VDWS(10, 3, 0.01)
 
 

@@ -20,5 +20,29 @@ class TestPoision(unittest.TestCase):
         self.assertEqual(len(x), n)
         self.assertTrue(np.all(x!=0)) #type:ignore
 
+class TestVDWS(unittest.TestCase):
+    def test_p_1(self):
+        n = 10 
+        m = 3
+        p = 0.01
+        seed = 3902944517
+
+        VDWS(n,m, p, seed=seed)
+    
+    def xtest_p_2(self):
+        n = 20 
+        m = 10
+        p = 0.01
+        seed = 1045711233
+
+        VDWS(n,m, p, seed=seed)
+    
+    def xtest_p_3(self):
+        n = 2000 
+        m = 25
+        p = 0.01
+        seed = 1868584733 
+
+        VDWS(n,m, p, seed=seed)
 if __name__ == '__main__':
     unittest.main()
