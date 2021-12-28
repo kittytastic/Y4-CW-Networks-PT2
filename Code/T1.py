@@ -1,7 +1,8 @@
-from typing import List, Optional, Tuple, Set, Dict, Union
+from typing import Iterable, List, Optional, Tuple, Set, Dict, Union
 from Utils import find_strong_componets
 
 Graph = Dict[int, Set[int]]
+Node = int
 
 def load_graph(graph_txt:str)->Graph:
     """
@@ -57,9 +58,10 @@ def longest_path_dfs(n:int, visited:Set[int], longest_pl:Dict[int, int], longest
         if m not in visited:
             longest_path_dfs(m, visited, longest_pl, longest_pl_bt, weight_dict, g)
         
-        if longest_pl[n]<longest_pl[m]+weight_dict[m]:
-            longest_pl[n] = longest_pl[m]+weight_dict[m]
+        if longest_pl[n]<longest_pl[m]+weight_dict[n]:
+            longest_pl[n] = longest_pl[m]+weight_dict[n]
             longest_pl_bt[n] = m
+
     
 def rebuild_path(n: int, longest_pl_bt:Dict[int,Union[int, None]], route: List[int]):
     route.append(n)
@@ -69,7 +71,7 @@ def rebuild_path(n: int, longest_pl_bt:Dict[int,Union[int, None]], route: List[i
     else:
         rebuild_path(m, longest_pl_bt, route)
 
-def longest_path(g:Graph, weight_dict: Dict[int, int])->List[int]:
+def longest_path_forward_pass(g:Graph, weight_dict:Dict[Node,int])->Tuple[Dict[Node,int], Dict[Node, Union[None, Node]]]:
     visited:Set[int]=set()
     longest_pl = {k:weight_dict[k] for k in g.keys()} 
     longest_pl_bt:Dict[int, Union[int, None]] = {k:None for k in g.keys()}
@@ -77,6 +79,11 @@ def longest_path(g:Graph, weight_dict: Dict[int, int])->List[int]:
     for v in g.keys():
         if v not in visited:
             longest_path_dfs(v, visited, longest_pl, longest_pl_bt, weight_dict, g)
+
+    return (longest_pl, longest_pl_bt)
+
+def longest_path(g:Graph, weight_dict: Dict[int, int])->List[int]:
+    longest_pl, longest_pl_bt = longest_path_forward_pass(g, weight_dict)
 
     max_pl = 0
     max_p_start = -1
@@ -96,7 +103,7 @@ def remove_self_cycles(g:Graph)->Graph:
     
     return g
 
-def unmerge_nodes(nodes:Set[int], merged_nodes: List[Set[int]])->Set[int]:
+def unmerge_nodes(nodes:Iterable[int], merged_nodes: List[Set[int]])->Set[int]:
     out_set:Set[int] = set()
 
     for n in nodes:

@@ -103,6 +103,93 @@ class TestLongestPath(unittest.TestCase):
 
       expected = [1]
       self.assertEqual(expected, longest_path(in_g, in_w))
+   
+   def test_lp_2(self):
+      in_g:Graph = {
+         1: {5},
+         5: set(),
+      }
+      in_w = {
+         1:4,
+         5:3
+      }
+
+      expected = [1,5]
+      self.assertEqual(expected, longest_path(in_g, in_w))
+   
+   def test_lp_3(self):
+      in_g:Graph = {
+         1: {2,3},
+         2: set(),
+         3: set(),
+      }
+      in_w = {
+         1:4,
+         2:3,
+         3:1,
+      }
+
+      expected = [1,2]
+      self.assertEqual(expected, longest_path(in_g, in_w))
+   
+   def test_lp_4(self):
+      in_g:Graph = {
+         1: {2},
+         2: set(),
+         3: {4},
+         4: set(),
+      }
+      in_w = {
+         1:4,
+         2:3,
+         3:1,
+         4:4,
+      }
+
+      expected = [1,2]
+      self.assertEqual(expected, longest_path(in_g, in_w))
+   
+   def test_lp_5(self):
+      in_g:Graph = {
+         1: {2,3},
+         2: {4,3},
+         3: {4,5},
+         4: {6},
+         5: {6},
+         6: set(),
+      }
+      in_w = {
+         1:3,
+         2:1,
+         3:2,
+         4:5,
+         5:4,
+         6:1,
+      }
+
+      expected = [1,2,3,4,6]
+      self.assertEqual(expected, longest_path(in_g, in_w))
+
+class TestLongestPathForwardPass(unittest.TestCase):
+   def test_lpfp_1(self):
+      in_g:Graph = {
+         1: {2},
+         2: set(),
+         3: {4},
+         4: set(),
+      }
+      in_w = {
+         1:4,
+         2:3,
+         3:1,
+         4:4,
+      }
+
+      expected_w = {1: 7, 2:3, 3:5, 4:4}
+      expected_bt = {1:2, 2:None, 3:4, 4:None}
+      ow, obt = longest_path_forward_pass(in_g, in_w)
+      self.assertEqual(expected_w, ow)
+      self.assertEqual(expected_bt, obt)
 
 class TestInDegree(unittest.TestCase):
    def test_id_1(self):
