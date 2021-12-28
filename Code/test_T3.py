@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+from numpy.random.mtrand import seed
 from T3 import *
 
 class TestPoision(unittest.TestCase):
@@ -68,5 +69,45 @@ class TestVDWS(unittest.TestCase):
         seed = 2540674012 
 
         VDWS(n,m, p, seed=seed)
+
+class TestSIM(unittest.TestCase):
+    def xtest_sim_1(self):
+        transmition_p:Transitions = {
+            (State.I, State.S):0.00,
+            (State.I, State.V):0.00,
+            (State.VI, State.S):0.00,
+            (State.VI, State.V):0.00
+        }   
+
+        t_i = 2
+        g = VDWS(20, 5, 0.01, seed=42)
+
+        metrics = simulate(g, transmition_p, t_i)
+        self.assertEqual(len(metrics[State.I]), 2)
+    
+    def test_sim_2(self):
+        transmition_p:Transitions = {
+            (State.I, State.S):1.00,
+            (State.I, State.V):0.00,
+            (State.VI, State.S):0.00,
+            (State.VI, State.V):0.00
+        }   
+
+        t_i = 2
+        g = VDWS(20, 5, 0.01, seed=42)
+
+        metrics = simulate(g, transmition_p, t_i)
+        self.assertEqual(metrics[State.R][-1], 20)
+
+class TestIsAnticlockwise(unittest.TestCase):
+    def test_ac_1(self):
+        self.assertTrue(is_anticlockwise(8, 1, 7))
+        self.assertTrue(is_anticlockwise(8, 0, 6))
+        self.assertTrue(is_anticlockwise(8, 7, 5))
+
+    def test_ac_2(self):
+        self.assertFalse(is_anticlockwise(8, 7, 1))
+        self.assertFalse(is_anticlockwise(8, 6, 0))
+        self.assertFalse(is_anticlockwise(8, 5, 7))
 if __name__ == '__main__':
     unittest.main()

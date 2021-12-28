@@ -6,6 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 
+from numpy.random.mtrand import seed
+
 Node = int
 Population = Dict['State', Set[Node]]
 Transitions = Dict[Tuple['State', 'State'], float]
@@ -56,7 +58,7 @@ def simulate(
     all_people = tuple(g.keys())
     initial_infected = random.sample(all_people, start_infected)
     pop: Population = {
-        State.S: set(all_people),
+        State.S: set(all_people)-set(initial_infected),
         State.I: set(initial_infected),
         State.V:set(), State.VI: set(), State.R: set()
     }
@@ -64,9 +66,9 @@ def simulate(
     metrics = add_to_metrics(metrics, pop)
 
     time=1
-    while len(pop[State.S])>0 or len(pop[State.I])>0 or len(pop[State.VI])>0:
+    while len(pop[State.I])>0 or len(pop[State.VI])>0:
+        # Deal with new vaccines
         if time>vaccines_start:    
-            # Deal with new vaccines
             to_vaccinate = vaccine_strategy(g, pop, 400)
             pop[State.S]-=to_vaccinate
             pop[State.V] = pop[State.V].union(to_vaccinate)
@@ -77,7 +79,7 @@ def simulate(
 
         all_infections = pop[State.I].union(pop[State.VI])
         for i in all_infections:
-            i_state = State.I if all_infections in pop[State.I] else State.VI
+            i_state = State.I if i in pop[State.I] else State.VI
             
             for n in g[i]:
                 r = random.random()
@@ -132,6 +134,12 @@ def poisson(n: int, m: int)->List[int]:
 
     return list(dist)
 
+def is_anticlockwise(num_nodes:Node, cur_node:Node, query_node: Node):
+    cn_shift = cur_node+num_nodes
+    qn_shift = query_node+num_nodes
+    lb = cn_shift-num_nodes//2
+
+    return (qn_shift>lb and qn_shift<cn_shift) or (query_node>lb and query_node<cn_shift)
 
 def VDWS(n: int, m: int, rewire_prob: float, seed:Optional[int] = None)->Graph:
     if seed is None:
@@ -142,18 +150,22 @@ def VDWS(n: int, m: int, rewire_prob: float, seed:Optional[int] = None)->Graph:
     g:Graph = {i:set() for i in range(n)}
     local_degrees = poisson(n,m)
 
+    edges_c = 0
     for i in range(n):
         for j in range(-local_degrees[i], local_degrees[i]+1):
             v = j % n
             if v==i:
                 continue
+            edges_c +=1
             g[i].add(v)
             g[v].add(i)
 
+    rewire_c  = 0
+    rewire_skip = 0
     rewired_edges:Set[Tuple[Node, Node]] = set()
     for i in range(n):
         for j in g[i]:
-            if (i,j) in rewired_edges:
+            if (i,j) in rewired_edges or is_anticlockwise(n, i, j):
                 continue
                 
             p = rng.random()
@@ -166,10 +178,15 @@ def VDWS(n: int, m: int, rewire_prob: float, seed:Optional[int] = None)->Graph:
                     g[v].add(i)
                     rewired_edges.add((i,v))
                     rewired_edges.add((v,i))
+                    rewire_c +=1
+                else:
+                    rewire_skip +=1
+    
+    print(f"Edges: {edges_c}  Rewire: {rewire_c} Rewire Skip: {rewire_skip}  ({100*rewire_c/edges_c:.4f})  p:{100*rewire_prob}")
 
     return g
 
-def graph_metrics(metrics:Metrics, name:str="tmp-T3"):
+def graph_metrics(metrics:Metrics, name:str="tmp-T3", scale:str='linear'):
     total_I = [metrics[State.I][i]+metrics[State.VI][i] for i in range(len(metrics[State.I]))]
 
     fig, axs = plt.subplots(2, 3, sharex=True, sharey=True)
@@ -187,6 +204,9 @@ def graph_metrics(metrics:Metrics, name:str="tmp-T3"):
     axs[1, 2].plot(total_I, 'tab:red')
     axs[1, 2].set_title('Total Infected (I+VI)')
     
+    for ax in axs.flat:
+        ax.set_yscale(scale)
+
     fig.supxlabel('Simulation Steps')
     fig.supylabel('Number of People')
 
@@ -204,7 +224,7 @@ def seed_thrash():
 
 if __name__ == "__main__":
     transmition_p:Transitions = {
-            (State.I, State.S):1.00,
+            (State.I, State.S):0.01,
             (State.I, State.V):0.01,
             (State.VI, State.S):0.01,
             (State.VI, State.V):0.01
@@ -213,9 +233,15 @@ if __name__ == "__main__":
     t_i = 2
 
     g = VDWS(20000, 25, 0.01)
-    metrics = simulate(g, transmition_p, t_i)
+    metrics = simulate(g, transmition_p, t_i, rand_seed=random.randint(0, int(10e6)))
     graph_metrics(metrics)
+    graph_metrics(metrics, name='tmp-T3-log', scale='log')
+    #import Utils
 
+    #sc = Utils.find_strong_componets(g)
+    
+    #for s in sc:
+    #    print(f"Set of size: {len(s)}")
    
 
 

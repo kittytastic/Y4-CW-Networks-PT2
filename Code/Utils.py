@@ -84,7 +84,7 @@ def _dfs_one(n:int, visited:Set[int], stack: List[int], g:Graph):
     return stack
 
 def _graph_transpose(g:Graph)->Graph:
-    tg = {k:set() for k in g.keys()}
+    tg:Graph = {k:set() for k in g.keys()}
     
     for k, v in g.items():
         for n in v:
@@ -92,7 +92,7 @@ def _graph_transpose(g:Graph)->Graph:
 
     return tg
 
-def _dfs_two(n: int, visited:Set[int], cc:Set[int], g:Graph):
+def _dfs_two(n: int, visited:Set[int], cc:Set[int], g:Graph)->Set[int]:
     visited.add(n)
     cc.add(n)
     for m in g[n]:
@@ -101,8 +101,8 @@ def _dfs_two(n: int, visited:Set[int], cc:Set[int], g:Graph):
 
     return cc
 
-def find_strong_componets(g: Graph):
-    stack=[]
+def find_strong_componets(g: Graph)->List[Set[int]]:
+    stack:List[int]=[]
     visited=set()
 
     for v in g.keys():
@@ -111,8 +111,8 @@ def find_strong_componets(g: Graph):
 
     g_t = _graph_transpose(g)
 
-    visited = set()
-    strong_components = []
+    visited:Set[int] = set()
+    strong_components:List[Set[int]] = []
 
     while len(stack)>0:
         v = stack.pop()
