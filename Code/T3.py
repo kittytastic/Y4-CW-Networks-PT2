@@ -145,6 +145,8 @@ def VDWS(n: int, m: int, rewire_prob: float, seed:Optional[int] = None)->Graph:
     for i in range(n):
         for j in range(-local_degrees[i], local_degrees[i]+1):
             v = j % n
+            if v==i:
+                continue
             g[i].add(v)
             g[v].add(i)
 
@@ -159,10 +161,7 @@ def VDWS(n: int, m: int, rewire_prob: float, seed:Optional[int] = None)->Graph:
                 v = rng.randint(0,n-1)
                 if v!=i and v not in g[i]:
                     g[i].remove(j)
-                    try:
-                        g[j].remove(i) 
-                    except:
-                        raise Exception(f"Had the bug n={n} m={m} p={rewire_prob} seed={seed}")
+                    g[j].remove(i) 
                     g[i].add(v)
                     g[v].add(i)
                     rewired_edges.add((i,v))
@@ -193,9 +192,19 @@ def graph_metrics(metrics:Metrics, name:str="tmp-T3"):
 
     plt.savefig(f'Artifacts/{name}.png')
 
+
+def seed_thrash():
+    to = 1000000
+    step = to/100
+    for i in range(to):
+        if i%step==0:
+            print(f"{i}/{to} ({i*100/to}%)")
+        
+        _ = VDWS(10, 1, 0.01)
+
 if __name__ == "__main__":
     transmition_p:Transitions = {
-            (State.I, State.S):0.01,
+            (State.I, State.S):1.00,
             (State.I, State.V):0.01,
             (State.VI, State.S):0.01,
             (State.VI, State.V):0.01
@@ -203,16 +212,10 @@ if __name__ == "__main__":
 
     t_i = 2
 
-    #g = VDWS(20, 25, 0.01)
-    #metrics = simulate(g, transmition_p, t_i)
-    #graph_metrics(metrics)
+    g = VDWS(20000, 25, 0.01)
+    metrics = simulate(g, transmition_p, t_i)
+    graph_metrics(metrics)
 
-    to = 1000000
-    step = to/100
-    for i in range(to):
-        if i%step==0:
-            print(f"{i}/{to} ({i*100/to}%)")
-        
-        g = VDWS(10, 3, 0.01)
+   
 
 
