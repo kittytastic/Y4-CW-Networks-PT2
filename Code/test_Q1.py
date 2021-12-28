@@ -29,7 +29,7 @@ class TestLargestCCUndirected(unittest.TestCase):
       self.assertEqual(expected, largest_unilateral_strong_component(in_g))
 
    def test_dfs_3(self):
-      in_g = {
+      in_g:Graph = {
          1: {2},
          2: {1},
          3: set(),
@@ -41,7 +41,7 @@ class TestLargestCCUndirected(unittest.TestCase):
 
 class TestLargestCCDirected(unittest.TestCase):
    def test_lccd_1(self):
-      in_g = {
+      in_g:Graph = {
          1: set(),
          2: {1},
          3: {2,4},
@@ -87,12 +87,12 @@ class TestRemoveSelfCycles(unittest.TestCase):
          1: {1},
          5: {5},
       } 
-      expected_n = {1:set(), 5:set()}
+      expected_n:Graph = {1:set(), 5:set()}
       self.assertEqual(expected_n, remove_self_cycles(in_g))
 
 class TestLongestPath(unittest.TestCase):
    def test_lp_1(self):
-      in_g = {
+      in_g:Graph = {
          1: set(),
          5: set(),
       }
