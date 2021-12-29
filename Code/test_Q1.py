@@ -1,6 +1,5 @@
 import unittest
-from T1 import *
-from T3 import State, global_most_at_risk
+from Q1 import *
 
 class TestLargestCCUndirected(unittest.TestCase):
    def test_dfs_1(self):

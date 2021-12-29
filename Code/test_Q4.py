@@ -230,27 +230,27 @@ class TestGetBest(unittest.TestCase):
         in_dict = {3: "one", 7: "two", 1:"three"}
 
         expected = [("one", 10), ("two", 20)]
-        self.assertEqual(expected, get_best(in_g, in_dict, top_count=2)) 
+        self.assertEqual(expected, get_best(in_g, in_dict, top_count=2, smallest=True))
     
     def test_gb_2(self):
         in_g = {3: 10, 1: 30, 7:10}
         in_dict = {3: "one", 7: "two", 1:"three"}
 
         expected = [("one", 10), ("two", 10)]
-        self.assertEqual(expected, get_best(in_g, in_dict, top_count=1)) 
+        self.assertEqual(expected, get_best(in_g, in_dict, top_count=1, smallest=True)) 
     
     def test_gb_3(self):
         in_g = {3: 10, 1: 30, 7:20}
         in_dict = {3: "one", 7: "two", 1:"three"}
 
         expected = [("three", 30), ("two", 20)]
-        self.assertEqual(expected, get_best(in_g, in_dict, top_count=2, smallest=True)) 
+        self.assertEqual(expected, get_best(in_g, in_dict, top_count=2)) 
     
     def test_gb_4(self):
         in_g = {3: 10, 7: 10, 1: 30}
         in_dict = {3: "one", 7: "two", 1:"three"}
 
         expected = [("three", 30), ("one", 10), ("two", 10)]
-        self.assertEqual(expected, get_best(in_g, in_dict, top_count=2, smallest=True)) 
+        self.assertEqual(expected, get_best(in_g, in_dict, top_count=2)) 
 if __name__ == '__main__':
     unittest.main()

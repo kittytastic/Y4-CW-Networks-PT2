@@ -1,7 +1,6 @@
 import unittest
 import numpy as np
-from numpy.random.mtrand import seed
-from T3 import *
+from Q5_6 import *
 
 class TestPoision(unittest.TestCase):
     def test_p_1(self):

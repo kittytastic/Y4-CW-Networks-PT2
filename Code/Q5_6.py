@@ -211,7 +211,7 @@ def VDWS(n: int, m: int, rewire_prob: float, seed:Optional[int] = None)->Graph:
                 else:
                     rewire_skip +=1
     
-    print(f"Edges: {edges_c}  Rewire: {rewire_c} Rewire Skip: {rewire_skip}  ({100*rewire_c/edges_c:.4f})  p:{100*rewire_prob}")
+    #print(f"Edges: {edges_c}  Rewire: {rewire_c} Rewire Skip: {rewire_skip}  ({100*rewire_c/edges_c:.4f})  p:{100*rewire_prob}")
 
     return g
 
