@@ -1,19 +1,19 @@
 
-from typing import Callable, Iterable, List, Optional, Tuple, Set, Dict, TypeVar, Union, Any
+from typing import Callable, List, Optional, Tuple, Set, Dict, TypeVar, Union, Any
 from enum import Enum
 import random
 import numpy as np
 import matplotlib.pyplot as plt
 from Utils import graph_subset
 from Q4 import closeness_centrality
+from graph_types import *
 
-
-Node = int
 Population = Dict['State', Set[Node]]
 Transitions = Dict[Tuple['State', 'State'], float]
-Graph = Dict[Node, Set[Node]]
 Metrics = Dict['State', List[int]]
 VaccinationStrategy = Callable[[Graph, Population, int], Set[Node]]
+_T = TypeVar("_T")
+_S = TypeVar("_S")
 
 class State(Enum):
     S = 1
@@ -38,8 +38,6 @@ def add_to_metrics(m: Metrics, pop: Population)->Metrics:
         m[s].append(len(pop[s]))
     
     return m
-_T = TypeVar("_T")
-_S = TypeVar("_S")
 
 def _take_best(in_l: List[_T], key: Callable[[_T], Union[int, float]], val: Callable[[_T], _S], num: int, largest:bool = True)->List[_S]:
     sorted_l = sorted(in_l, key=key, reverse=largest)
@@ -80,6 +78,7 @@ def simulate(
     start_infected:int=5,
     rand_seed:int = 42
     )->Metrics:
+    verify_prob_dict(t)
     random.seed(rand_seed)
 
     metrics:Metrics = {s:[] for s in State} 

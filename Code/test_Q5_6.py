@@ -151,7 +151,7 @@ class TestLocalMostAtRisk(unittest.TestCase):
          6: {5,7},
          7: {5,6}
       } 
-      in_pop = {State.S: {1,2,3,4,5,7}, State.I:{6}, State.VI:set()}
+      in_pop:Population = {State.S: {1,2,3,4,5,7}, State.I:{6}, State.VI:set()}
       expected = {5,7}
 
       self.assertEqual(expected, local_most_at_risk(in_g, in_pop, 2))

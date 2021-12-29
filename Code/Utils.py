@@ -1,7 +1,7 @@
-from typing import List, Optional, Tuple, Set, Dict, Union
-Graph = Dict[int, Set[int]]
-Node = int
+from typing import List, Optional, Set, Dict
+from graph_types import *
 
+#########################################################################
 def _check_if_acyclic_r(cur_node:int, g: Graph, visited: Set[int], cs: List[int]):
     lcs = list(cs)
     lcs.append(cur_node)
@@ -11,7 +11,7 @@ def _check_if_acyclic_r(cur_node:int, g: Graph, visited: Set[int], cs: List[int]
             print(f"Cycle: {lcs[lcs.index(n):]}->{cur_node}->{n}")
 
         if n not in visited:
-            check_if_acyclic_r(n, g, visited, lcs)
+            _check_if_acyclic_r(n, g, visited, lcs)
         
     return visited
 
@@ -22,9 +22,9 @@ def check_if_acyclic(graph:Graph):
             print(f"{i}/{len(keys)}  ({i*100/len(keys):.1f})")
         k = keys[i]
         _check_if_acyclic_r(k, graph, set(), [])
+###########################################################################
 
-
-def in_degree(nodes:Set[int], g:Graph)->Dict[int,int]:
+def in_degree(nodes:Set[Node], g:Graph)->Dict[Node,int]:
     out_dict = {n:0 for n in nodes}
     for n in nodes:
         for m in nodes:
@@ -33,12 +33,12 @@ def in_degree(nodes:Set[int], g:Graph)->Dict[int,int]:
 
     return out_dict
 
-def out_degree(nodes: Set[int], g:Graph)->Dict[int,int]:
+def out_degree(nodes: Set[Node], g:Graph)->Dict[Node,int]:
     return {n:len(g[n].intersection(nodes)) for n in nodes} 
 
 
-def build_distribution(observed: Dict[int,int])->Dict[int,int]:
-    out_dict = {}
+def build_distribution(observed: Dict[Node,int])->Dict[int,int]:
+    out_dict:Dict[int,int] = {}
     for c in observed.values():
         if c in out_dict:
             out_dict[c]+=1
@@ -51,7 +51,7 @@ def normalize_distribution(dist: Dict[int, int])->Dict[int, float]:
     total = sum(dist.values())
     return {k: v/total for k,v in dist.items()}
 
-def plot_degree(g, file_name, title="Unnamed", node_subset = None):
+def plot_degree(g:Graph, file_name:str, title:str="Unnamed", node_subset:Optional[Set[Node]] = None):
     import matplotlib.pyplot as plt
     
     if node_subset is None:
@@ -72,7 +72,7 @@ def plot_degree(g, file_name, title="Unnamed", node_subset = None):
 
     fig.suptitle(title)
     plt.savefig(f'Artifacts/{file_name}.png')
-
+###########################################################################
 
 def _dfs_one(n:int, visited:Set[int], stack: List[int], g:Graph):
     visited.add(n)
@@ -122,5 +122,9 @@ def find_strong_componets(g: Graph)->List[Set[int]]:
 
     return strong_components
 
+#########################################################################
 def graph_subset(g: Graph, subset:Set[Node])->Graph:
+    '''
+    Returns the subgraph containing only a subset of nodes
+    '''
     return {n: g[n].intersection(subset) for n in subset}

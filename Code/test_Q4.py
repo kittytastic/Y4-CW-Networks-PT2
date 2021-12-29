@@ -153,7 +153,7 @@ class TestLoadLondon(unittest.TestCase):
         self.assertIn(aa, lg[bb], msg=f"Failed {a} (id: {aa}) in {b} (id: {bb})")
         self.assertIn(bb, lg[aa], msg=f"Failed {b} (id: {bb}) in {a} (id: {aa})")
     
-    def test_ll_1(self):
+    def test_ll_2(self):
       lg, lg_map = load_london("Datasets/london_transport_raw.edges.txt")
       
       know_pairs = [
@@ -226,31 +226,34 @@ class TestLoadCCSB(unittest.TestCase):
 
 class TestGetBest(unittest.TestCase):
     def test_gb_1(self):
-        in_g = {3: 10, 7: 20, 1: 30}
+        in_g = {3: 10.0, 7: 20.0, 1: 30.0}
         in_dict = {3: "one", 7: "two", 1:"three"}
 
         expected = [("one", 10), ("two", 20)]
         self.assertEqual(expected, get_best(in_g, in_dict, top_count=2, smallest=True))
     
     def test_gb_2(self):
-        in_g = {3: 10, 1: 30, 7:10}
+        in_g = {3: 10.0, 1: 30.0, 7:10.0}
         in_dict = {3: "one", 7: "two", 1:"three"}
 
         expected = [("one", 10), ("two", 10)]
         self.assertEqual(expected, get_best(in_g, in_dict, top_count=1, smallest=True)) 
     
     def test_gb_3(self):
-        in_g = {3: 10, 1: 30, 7:20}
+        in_g = {3: 10.0, 1: 30.0, 7:20.0}
         in_dict = {3: "one", 7: "two", 1:"three"}
 
         expected = [("three", 30), ("two", 20)]
         self.assertEqual(expected, get_best(in_g, in_dict, top_count=2)) 
     
     def test_gb_4(self):
-        in_g = {3: 10, 7: 10, 1: 30}
+        in_g = {3: 10.0, 7: 10.0, 1: 30.0}
         in_dict = {3: "one", 7: "two", 1:"three"}
 
         expected = [("three", 30), ("one", 10), ("two", 10)]
         self.assertEqual(expected, get_best(in_g, in_dict, top_count=2)) 
+
+
+
 if __name__ == '__main__':
     unittest.main()

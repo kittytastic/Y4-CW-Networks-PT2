@@ -1,7 +1,7 @@
 from typing import Set
-from Utils import *
+from graph_types import *
 import random
-import math
+from Utils import plot_degree
 
 class PATrial:
     def __init__(self, num_nodes:int):
@@ -12,7 +12,7 @@ class PATrial:
     def run_trial(self, num_nodes:int)->Set[int]:
         num_nodes = random.choice(list(self._out_ballot.values()))
 
-        new_neighbors = set()
+        new_neighbors:Set[Node] = set()
         for _ in range(num_nodes):
             nn = random.choice(self._node_ballot)
             if nn not in new_neighbors:
@@ -35,7 +35,7 @@ def make_complete_graph(num_nodes:int)->Graph:
    
     return complete_graph
     
-def make_PA_Graph(total_nodes, out_degree:int)->Graph:
+def make_PA_Graph(total_nodes:int, out_degree:int)->Graph:
    
     PA_graph = make_complete_graph(out_degree)
     trial = PATrial(out_degree)

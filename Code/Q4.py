@@ -1,12 +1,16 @@
-from typing import List, Optional, Tuple, Set, Dict, Union, Any
+from typing import Callable, List, Tuple, Set, Dict, Union, Any
 
-from Utils import Graph, find_strong_componets
+from Utils import find_strong_componets, graph_subset
+from graph_types import *
+
 import heapq
 import math
 
-def load_london(file_name)->Graph:
-    g = {}
-    station_id_map = {}
+NodeNameMap = Dict[Node, Any]
+
+def load_london(file_name:str)->Tuple[Graph, NodeNameMap]:
+    g:Graph = {}
+    station_id_map:Dict[Any, Node] = {}
     next_station_id = 0
 
     with open(file_name) as f:
@@ -30,8 +34,8 @@ def load_london(file_name)->Graph:
 
     return g, {v:k for k,v in station_id_map.items()}
 
-def load_roget(file_name: str)->Graph:
-    g = {}
+def load_roget(file_name: str)->Tuple[Graph,NodeNameMap]:
+    g:Graph = {}
     with open(file_name) as f: 
         lines = f.readlines()
 
@@ -58,9 +62,9 @@ def load_roget(file_name: str)->Graph:
     
     return g, {k:k for k in g.keys()}
 
-def load_ccsb_y2h(file_name:str)->Graph:
-    g = {}
-    name_id_map = {}
+def load_ccsb_y2h(file_name:str)->Tuple[Graph,NodeNameMap]:
+    g:Graph = {}
+    name_id_map:Dict[Any, Node] = {}
     next_id = 0
     
     with open(file_name) as f:
@@ -83,9 +87,9 @@ def load_ccsb_y2h(file_name:str)->Graph:
     return g, {v:k for k,v in name_id_map.items()}
 
                 
-def dijkstras(start_node:int, g:Graph)->Dict[int, int]:
-    out_dict = {}
-    possible_weights: List[Tuple(int, int)] = [(0, start_node)]
+def dijkstras(start_node:Node, g:Graph)->Dict[Node, int]:
+    out_dict:Dict[Node, int] = {}
+    possible_weights: List[Tuple[int, Node]] = [(0, start_node)]
     left_to_visit = set(g.keys())
 
     while len(left_to_visit)>0:
@@ -109,23 +113,23 @@ def dijkstras(start_node:int, g:Graph)->Dict[int, int]:
 def min_path_dict(g:Graph)->Dict[int, Dict[int,int]]:
     return {n: dijkstras(n,g) for n in g.keys()}
 
-def closeness_centrality(g:Graph)->Dict[int, float]:
+def closeness_centrality(g:Graph)->Dict[Node, float]:
     min_path = min_path_dict(g)
     return {n: 1/sum(min_path[n].values()) for n in g.keys()}
 
-def nearness_centrality(g: Graph)->Dict[int, float]:
+def nearness_centrality(g: Graph)->Dict[Node, float]:
     min_path = min_path_dict(g)
     return {
             n: sum([1/d for d in min_path[n].values() if d!=0])
             for n in g.keys()
         }
 
-def degree_centrality(g: Graph)->Dict[int, int]:
+def degree_centrality(g: Graph)->Dict[Node, int]:
     return {n: len(v) for n,v in g.items()}
 
-def adjacency_centrality(g: Graph)->Dict[int, int]:
+def adjacency_centrality(g: Graph)->Dict[Node, float]:
     d = degree_centrality(g)
-    out_dir = {}
+    out_dir:Dict[Node, float] = {}
     for j in g.keys():
         x = sum([(d[j]-d[i])/(d[j]+d[i]) for i in g[j] if i!=j])
         x *= 1/d[j]
@@ -134,20 +138,16 @@ def adjacency_centrality(g: Graph)->Dict[int, int]:
     return out_dir
 
 
-def strip_graph(g:Graph, nodes:Set[int])->Graph:
-    return {n: g[n].intersection(nodes) for n in nodes}
-
-
 def strip_to_largest_connected(g: Graph)->Graph:
     sc = find_strong_componets(g)
-    largest_set = set()
+    largest_set:Set[Node] = set()
     for s in sc:
         if len(s)>len(largest_set):
             largest_set = s
 
-    return strip_graph(g, largest_set)    
+    return graph_subset(g, largest_set)    
 
-def get_best(d: Dict[int, float], name_map: Dict[int, Any],  top_count:int=20, smallest=False):
+def get_best(d: Union[Dict[Node, float], Dict[Node, int]], name_map: Dict[int, Any],  top_count:int=20, smallest:bool=False)->List[Tuple[Any, Union[float,int]]]:
     to_sort = [(name_map[k], v) for k,v in d.items()]
     sorted_l = sorted(to_sort, key=lambda x: x[1], reverse=(not smallest))
 
@@ -161,13 +161,13 @@ def get_best(d: Dict[int, float], name_map: Dict[int, Any],  top_count:int=20, s
 
     return top_part 
 
-def flatten(t):
+def flatten(t: List[List[Tuple[Any, Union[float,int]]]])->List[Tuple[Any, ...]]:
     width = len(t)
     max_table_l = max([len(x) for x in t])
 
-    out_t = []
+    out_t:List[Tuple[Any, ...]] = []
     for i in range(max_table_l):
-        row = []
+        row:List[Any] = []
         for j in range(width):
             sec = t[j]
             if i<len(sec):
@@ -185,7 +185,7 @@ def flatten(t):
 
 def generate_table(g: Graph, g_map: Dict[int, Any]):
     from tabulate import tabulate
-    metrics = [closeness_centrality, nearness_centrality, degree_centrality, adjacency_centrality]
+    metrics:List[Union[Callable[[Graph], Dict[Node,float]], Callable[[Graph], Dict[Node,int]], ]] = [closeness_centrality, nearness_centrality, degree_centrality, adjacency_centrality]
 
     table = [get_best(m(g), g_map, top_count=20) for m in metrics]
     print(table)

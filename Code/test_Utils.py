@@ -14,7 +14,7 @@ class TestGraphSubset(unittest.TestCase):
       }
       subset = {1,2,3,7}
 
-      expected = {1:{2,3}, 2:{1,3}, 3:{1,2}, 7:set()}
+      expected:Graph = {1:{2,3}, 2:{1,3}, 3:{1,2}, 7:set()}
       self.assertEqual(expected, graph_subset(in_g, subset))
    
 

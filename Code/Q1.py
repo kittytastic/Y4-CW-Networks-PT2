@@ -1,8 +1,7 @@
-from typing import Iterable, List, Optional, Tuple, Set, Dict, Union
+from typing import Iterable, List, Tuple, Set, Dict, Union
 from Utils import find_strong_componets
+from graph_types import *
 
-Graph = Dict[int, Set[int]]
-Node = int
 
 def load_graph(graph_txt:str)->Graph:
     """
