@@ -47,6 +47,6 @@ def make_PA_Graph(total_nodes:int, out_degree:int)->Graph:
 
 
 if __name__=="__main__":
-    g = make_PA_Graph(7000,10)
-    plot_degree(g, 'Q2')
+    g = make_PA_Graph(7500,10)
+    plot_degree(g, 'Q2', title="Degree Distribution of Adapted PA Model")
 
