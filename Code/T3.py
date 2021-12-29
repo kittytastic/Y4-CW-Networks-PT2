@@ -1,5 +1,5 @@
 
-from typing import Callable, Iterable, List, Optional, Tuple, Set, Dict, Union, Any
+from typing import Callable, Iterable, List, Optional, Tuple, Set, Dict, TypeVar, Union, Any
 from enum import Enum
 import random
 import numpy as np
@@ -38,9 +38,33 @@ def add_to_metrics(m: Metrics, pop: Population)->Metrics:
         m[s].append(len(pop[s]))
     
     return m
+_T = TypeVar("_T")
+_S = TypeVar("_S")
+
+def _take_best(in_l: List[_T], key: Callable[[_T], int], val: Callable[[_T], _S], num: int, largest:bool = True)->List[_S]:
+    sorted_l = sorted(in_l, key=key, reverse=largest)
+    top_l = sorted_l[:min(len(sorted_l), num)]
+    return [val(n) for n in top_l]
 
 def random_vaccine(_: Graph, pop: Population, num: int)->Set[Node]:
     return set(random.sample(tuple(pop[State.S]), min(num, len(pop[State.S]))))
+
+def global_most_at_risk(g: Graph, pop: Population, num: int)->Set[Node]:
+    degree = [(n, len(g[n])) for n in pop[State.S]]
+    return set(_take_best(degree, lambda x: x[1], lambda x: x[0], num))
+
+def local_most_at_risk(g: Graph, pop: Population, num:int)->Set[Node]:
+    i_neighbours = {n:0 for n in pop[State.S]}
+    for i in pop[State.S]:
+        for n in g[i]:
+            if n in pop[State.I] or n in pop[State.VI]:
+                i_neighbours[i]+=1
+
+    i_neighbours_l = list(i_neighbours.items())
+    return set(_take_best(i_neighbours_l, lambda x: x[1], lambda x: x[0], num))
+    
+
+
 
 def simulate(
     g:Graph,

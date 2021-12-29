@@ -1,5 +1,6 @@
 import unittest
 from T1 import *
+from T3 import State, global_most_at_risk
 
 class TestLargestCCUndirected(unittest.TestCase):
    def test_dfs_1(self):
@@ -241,6 +242,8 @@ class TestNormalizeDist(unittest.TestCase):
       in_d = {1:1, 2:2, 3:1, 5:3, 12:3} 
       expected = {1:0.1, 2:0.2, 3:0.1, 5:0.3, 12:0.3}
       self.assertEqual(expected, normalize_distribution(in_d))
+
+
 
 if __name__ == '__main__':
     unittest.main()
