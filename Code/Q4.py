@@ -1,5 +1,7 @@
 from typing import Callable, List, Tuple, Set, Dict, Union, Any
 
+from tabulate import tabulate
+
 from Utils import find_strong_componets, graph_subset
 from graph_types import *
 
@@ -183,31 +185,80 @@ def flatten(t: List[List[Tuple[Any, Union[float,int]]]])->List[Tuple[Any, ...]]:
 
 
 
-def generate_table(g: Graph, g_map: Dict[int, Any]):
+def generate_table(g: Graph, g_map: Dict[int, Any])->str:
     from tabulate import tabulate
     metrics:List[Union[Callable[[Graph], Dict[Node,float]], Callable[[Graph], Dict[Node,int]], ]] = [closeness_centrality, nearness_centrality, degree_centrality, adjacency_centrality]
 
     table = [get_best(m(g), g_map, top_count=20) for m in metrics]
-    print(table)
-    print()
     table=flatten(table)
-    print(tabulate(table, floatfmt=".3g", tablefmt="latex"))
+    return tabulate(table, floatfmt=".3g", tablefmt="latex", headers=["Node", "Closeness", "Node", "Near.", "Node", "Deg.", "Node", "Adj."])
 
-if __name__ == "__main__":
+def center_table(tab:str)->str:
+    return f'''\\begin{{center}}\n{tab}\n\\end{{center}}'''
+
+def allow_wide_table(tab:str, margin_adjust:str="-1.2in")->str:
+    return f'\\begin{{adjustwidth}}{{{margin_adjust}}}{{{margin_adjust}}}{tab}\\end{{adjustwidth}}'
+
+def Q3():
+    g = {
+         1: {4},
+         2: {4},
+         3: {4},
+         4: {1,2,3,5,6},
+         5: {4},
+         6: {4,7,8,9,10, 11},
+         7: {6, 8, 11},
+         8: {6, 7, 9, 11},
+         9: {6,8,10},
+         10: {6, 9, 11, 12},
+         11: {6, 7, 8, 10},
+         12: {10}
+    }
+    nodes = sorted(list(g.keys()))
+    a = closeness_centrality(g)
+    b = nearness_centrality(g)
+    c = degree_centrality(g)
+    d = adjacency_centrality(g)
+
+    tab:List[Tuple[Any, ...]] = [(i, a[i], b[i], c[i], d[i]) for i in nodes]
+
+
+    with open("Artifacts/Q3.tex", "w+") as f:
+        f.write(
+            center_table(
+                tabulate(tab, floatfmt=".3g", tablefmt="latex", headers=['Node', 'Closeness', 'Nearness', 'Degree', 'Adjacency'])))
+
+
+def Q4():
     lg, lg_map = load_london("Datasets/london_transport_raw.edges.txt")
     lg = strip_to_largest_connected(lg)
     print(f"Loaded London dataset: {len(lg)} nodes")
     print(f"London (strip) {len(lg)}")
-    generate_table(lg, lg_map)
-    exit()
+    london_tab = generate_table(lg, lg_map)
+    
     
     rg, rg_map = load_roget("Datasets/Roget.txt")
     rg = strip_to_largest_connected(rg)
     print(f"Loaded Roget dataset: {len(rg)} nodes")
     print(f"Roget (strip) {len(rg)}")
+    rg_tab = generate_table(rg, rg_map)
     
     cg, cg_map = load_ccsb_y2h("Datasets/CCSB-Y2H.txt")
     cg = strip_to_largest_connected(cg)
     print(f"Loaded CCSB-Y2H: {len(cg)} nodes")
     print(f"CCSB-Y2H (strip) {len(cg)}")
+    cg_tab = generate_table(cg, cg_map)
+
+    with open("Artifacts/Q4.tex", "w+") as f:
+        f.write(f"\\subsection*{{London}}\n")
+        f.write(allow_wide_table(center_table(london_tab), margin_adjust="-1.3in"))
+        f.write(f"\n\\subsection*{{Rodget}}\n")
+        f.write(center_table(rg_tab))
+        f.write(f"\n\\subsection*{{CCSB Y2H}}\n")
+        f.write(allow_wide_table(center_table(cg_tab)))
+
+
+if __name__ == "__main__":
+    Q3()
+    Q4()
 
