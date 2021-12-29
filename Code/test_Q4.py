@@ -253,7 +253,12 @@ class TestGetBest(unittest.TestCase):
         expected = [("three", 30), ("one", 10), ("two", 10)]
         self.assertEqual(expected, get_best(in_g, in_dict, top_count=2)) 
 
+class TestRank(unittest.TestCase):
+    def test_r_1(self):
+        in_d = {5: 6.0, 4: 10.0, 3: 7.0, 2: 9.0, 1:8.0}
+        expected = {1:3,2:4,3:2,4:5,5:1}
 
+        self.assertEqual(expected, rank(in_d))
 
 if __name__ == '__main__':
     unittest.main()

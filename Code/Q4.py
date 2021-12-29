@@ -257,8 +257,49 @@ def Q4():
         f.write(f"\n\\subsection*{{CCSB Y2H}}\n")
         f.write(allow_wide_table(center_table(cg_tab)))
 
+def rank(d: Dict[Node, Union[int, float]])->Dict[Node, int]:
+    l = list(d.items())
+    sorted_l = sorted(l, key=lambda x: x[1])
+    return {v[0]:idx+1 for idx, v in enumerate(sorted_l)}
+
+def spear_rank(a: Dict[Node, Union[int, float]], b: Dict[Node, Union[int, float]])->float:
+    from scipy.stats import spearmanr # type: ignore
+    a_rank_map = rank(a)
+    b_rank_map = rank(b)
+    nodes = list(a.keys())
+    a_ranked = [a_rank_map[n] for n in nodes]
+    b_ranked = [b_rank_map[n] for n in nodes]
+
+    return spearmanr(a_ranked, b_ranked)[0]
+
+
+def Q4_additional():
+    lg, _ = load_london("Datasets/london_transport_raw.edges.txt")
+    lg = strip_to_largest_connected(lg)
+    rg, _ = load_roget("Datasets/Roget.txt")
+    rg = strip_to_largest_connected(rg)    
+    cg, _ = load_ccsb_y2h("Datasets/CCSB-Y2H.txt")
+    cg = strip_to_largest_connected(cg)
+    
+    ds = [("London", lg), ("Roget", rg), ("CCSB Y2H", cg)]
+    tab:List[Tuple[Any, ...]] = []
+    for name, g in ds:
+        
+        cl = closeness_centrality(g)
+        near = nearness_centrality(g)
+        cor1 = spear_rank(cl, near)
+
+        deg = degree_centrality(g)
+        adj = adjacency_centrality(g)
+        cor2 = spear_rank(deg, adj) # type: ignore
+        tab.append((name, cor1, cor2))
+
+    with open("Artifacts/Q4-additional.tex", "w+") as f:
+        f.write(center_table(tabulate(tab, headers=["Dataset", "Closness & Nearness", "Degree & Adjacency"], tablefmt='latex')))
 
 if __name__ == "__main__":
     Q3()
     Q4()
+    print("Calculating additional Info...")
+    Q4_additional()
 

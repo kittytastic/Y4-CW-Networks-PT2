@@ -4,3 +4,15 @@
 \section{}
 \input{Tranche/Q4}
 
+We can dive a little deeper into comparing Nearness Centrality with Closeness Centrality and adjacency centrality with degree centrality by preforming a simple Spearman rank correlation analysis.
+We can work out the rank of each node under a particular centrality metric by ordering the nodes by that metric.
+Then preform Spearman rank corelation between the rank of nodes under 2 centrality metrics.
+The correlation coefficient for Nearness and Closeness centrality, and for Degree and Adjacency Centrality are tabulated below. 
+As a reminder, a coefficient of 1 means they are highly positively correlated and a coefficient of 0 means they have no corelation. 
+\input{Tranche/Q4-additional}
+
+
+Using the corelation coefficient and observing the top 20 results for each dataset.
+We can say that nearness centrality is a good alternative for closeness centrality.
+Also we can say that adjacency centrality can be used as an alternative to degree centrality, although their relationship is less strong than that of nearness and closeness. 
+
