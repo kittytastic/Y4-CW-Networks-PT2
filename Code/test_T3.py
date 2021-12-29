@@ -157,6 +157,27 @@ class TestLocalMostAtRisk(unittest.TestCase):
 
       self.assertEqual(expected, local_most_at_risk(in_g, in_pop, 2))
 
+class TestClosnessSusceptible(unittest.TestCase):
+    def test_cc_2(self):
+        in_g = {
+         1: {4},
+         2: {4},
+         3: {4},
+         4: {1,2,3,5,6},
+         5: {4},
+         6: {4,7,8,9,10, 11},
+         7: {6, 8, 11},
+         8: {6, 7, 9, 11},
+         9: {6,8,10},
+         10: {6, 9, 11, 12},
+         11: {6, 7, 8, 10},
+         12: {10},
+         13: {1,2,3,4,5,6,7,8,9}
+        } 
+        in_pop = {State.S: set(range(1,13)), State.I: {13}}
+        #expected = {1: 1/28, 2: 1/28, 3: 1/28, 4:1/18, 5:1/28, 6:1/16, 7:1/24, 8:1/23, 9:1/23, 10:1/22, 11:1/22, 12:1/32}
+        expected = {6, 4, 10, 11}
+        self.assertEqual(expected, closeness_of_susceptible(in_g, in_pop, 4)) 
 
 if __name__ == '__main__':
     unittest.main()

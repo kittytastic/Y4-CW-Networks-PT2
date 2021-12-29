@@ -4,9 +4,9 @@ from enum import Enum
 import random
 import numpy as np
 import matplotlib.pyplot as plt
-import sys
+from Utils import graph_subset
+from Q4 import closeness_centrality
 
-from numpy.random.mtrand import seed
 
 Node = int
 Population = Dict['State', Set[Node]]
@@ -41,7 +41,7 @@ def add_to_metrics(m: Metrics, pop: Population)->Metrics:
 _T = TypeVar("_T")
 _S = TypeVar("_S")
 
-def _take_best(in_l: List[_T], key: Callable[[_T], int], val: Callable[[_T], _S], num: int, largest:bool = True)->List[_S]:
+def _take_best(in_l: List[_T], key: Callable[[_T], Union[int, float]], val: Callable[[_T], _S], num: int, largest:bool = True)->List[_S]:
     sorted_l = sorted(in_l, key=key, reverse=largest)
     top_l = sorted_l[:min(len(sorted_l), num)]
     return [val(n) for n in top_l]
@@ -63,6 +63,11 @@ def local_most_at_risk(g: Graph, pop: Population, num:int)->Set[Node]:
     i_neighbours_l = list(i_neighbours.items())
     return set(_take_best(i_neighbours_l, lambda x: x[1], lambda x: x[0], num))
     
+def closeness_of_susceptible(g: Graph, pop: Population, num: int)->Set[Node]:
+    sub_graph = graph_subset(g, pop[State.S])
+    closeness = closeness_centrality(sub_graph)
+    closeness_l = list(closeness.items())
+    return set(_take_best(closeness_l, lambda x: x[1], lambda x:x[0], num))
 
 
 

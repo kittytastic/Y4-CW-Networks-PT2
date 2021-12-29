@@ -1,5 +1,6 @@
 from typing import List, Optional, Tuple, Set, Dict, Union
 Graph = Dict[int, Set[int]]
+Node = int
 
 def _check_if_acyclic_r(cur_node:int, g: Graph, visited: Set[int], cs: List[int]):
     lcs = list(cs)
@@ -120,3 +121,6 @@ def find_strong_componets(g: Graph)->List[Set[int]]:
             strong_components.append(_dfs_two(v, visited, set(), g_t)) 
 
     return strong_components
+
+def graph_subset(g: Graph, subset:Set[Node])->Graph:
+    return {n: g[n].intersection(subset) for n in subset}
