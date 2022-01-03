@@ -156,7 +156,7 @@ class TestLocalMostAtRisk(unittest.TestCase):
 
       self.assertEqual(expected, local_most_at_risk(in_g, in_pop, 2))
 
-class TestLocalMostAtRisk2(unittest.TestCase):
+class TestLocalMostAtRiskWeighted(unittest.TestCase):
     def test_lmar_1(self):
       in_g = {
          1: {3,4},
@@ -170,7 +170,7 @@ class TestLocalMostAtRisk2(unittest.TestCase):
       in_pop = {State.S: {1,3,5,6,7}, State.I:{4}, State.VI:{2}}
       expected = {1,3,5}
 
-      self.assertEqual(expected, local_most_at_risk2(in_g, in_pop, 3))
+      self.assertEqual(expected, local_most_at_risk(in_g, in_pop, 3))
     
     def test_lmar_2(self):
       in_g = {
@@ -185,7 +185,7 @@ class TestLocalMostAtRisk2(unittest.TestCase):
       in_pop:Population = {State.S: {1,2,3,4,5,7}, State.I:{6}, State.VI:set()}
       expected = {5,7}
 
-      self.assertEqual(expected, local_most_at_risk2(in_g, in_pop, 2))
+      self.assertEqual(expected, local_most_at_risk(in_g, in_pop, 2))
 
 class TestClosnessSusceptible(unittest.TestCase):
     def test_cc_2(self):

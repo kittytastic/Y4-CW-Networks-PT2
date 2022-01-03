@@ -51,16 +51,6 @@ def random_vaccine(_: Graph, pop: Population, num: int)->Set[Node]:
 def global_most_at_risk(g: Graph, pop: Population, num: int)->Set[Node]:
     degree = [(n, len(g[n])) for n in pop[State.S]]
     return set(_take_best(degree, lambda x: x[1], lambda x: x[0], num))
-
-def local_most_at_risk(g: Graph, pop: Population, num:int)->Set[Node]:
-    i_neighbours = {n:0 for n in pop[State.S]}
-    for i in pop[State.S]:
-        for n in g[i]:
-            if n in pop[State.I] or n in pop[State.VI]:
-                i_neighbours[i]+=1
-
-    i_neighbours_l = list(i_neighbours.items())
-    return set(_take_best(i_neighbours_l, lambda x: x[1], lambda x: x[0], num))
     
 def closeness_of_susceptible(g: Graph, pop: Population, num: int)->Set[Node]:
     sub_graph = graph_subset(g, pop[State.S])
@@ -68,13 +58,10 @@ def closeness_of_susceptible(g: Graph, pop: Population, num: int)->Set[Node]:
     closeness_l = list(closeness.items())
     return set(_take_best(closeness_l, lambda x: x[1], lambda x:x[0], num))
 
-def local_most_at_risk2(g: Graph, pop: Population, num:int)->Set[Node]:
+def local_most_at_risk(g: Graph, pop: Population, num:int)->Set[Node]:
     i_neighbours = {n:0 for n in pop[State.S]}
     all_infected = pop[State.I].union(pop[State.VI])
     for i in all_infected:
-        #sn = g[i].intersection(pop[State.S])
-        #for n in sn:
-        #    i_neighbours[n]+=1
         for n in g[i]:
             if n in pop[State.S]:
                 i_neighbours[n]+=1
@@ -82,6 +69,19 @@ def local_most_at_risk2(g: Graph, pop: Population, num:int)->Set[Node]:
     i_neighbours_l = list(i_neighbours.items())
     return set(_take_best(i_neighbours_l, lambda x: x[1], lambda x: x[0], num))
 
+def local_most_at_risk_2_step(g: Graph, pop: Population, num:int)->Set[Node]:
+    s1_risk = {n:0 for n in pop[State.S]}
+    all_infected = pop[State.I].union(pop[State.VI])
+    for i in all_infected:
+        for n in g[i]:
+            if n in pop[State.S]:
+                s1_risk[n]+=1
+
+    for p in s1_risk.keys():
+        s1_risk[p]*=len(pop[State.S].intersection(g[p]))
+
+    s1_risk = list(s1_risk.items())
+    return set(_take_best(s1_risk, lambda x: x[1], lambda x: x[0], num))
 
 def simulate(
     g:Graph,
@@ -92,11 +92,12 @@ def simulate(
     start_infected:int=5,
     rand_seed:int = 42
     )->Metrics:
+
+
     verify_prob_dict(t)
     random.seed(rand_seed)
     start_t = time.time()
     start_v = None
-
     metrics:Metrics = {s:[] for s in State} 
 
     all_people = tuple(g.keys())
@@ -301,11 +302,12 @@ def test_diffrent_strategy(g:Graph):
 
     t_i = 3
     
-    strats = [(random_vaccine, "Random"), (global_most_at_risk, "Global"), (local_most_at_risk2, "Local 2"), (local_most_at_risk, "Local")]
+    strats = [(random_vaccine, "Random"), (global_most_at_risk, "Global"), (local_most_at_risk, "Local"), (local_most_at_risk_2_step, "Local - 2 step")]
 
+    rs = random.randint(0, int(10e6))
     for s, name in strats:
         print(f"------  {name}  ------")
-        metrics = simulate(g, transmition_p, t_i, rand_seed=random.randint(0, int(10e6)), vaccine_strategy=s)
+        metrics = simulate(g, transmition_p, t_i, rand_seed=rs, vaccine_strategy=s)
         graph_metrics(metrics, name=f'Q6-{name}-lin')
         graph_metrics(metrics, name=f'Q6-{name}-log', scale='log')
 
@@ -317,29 +319,12 @@ if __name__ == "__main__":
             (State.VI, State.V):0.01
     }
 
-    t_i = 3
+    t_i = 4
 
     g = VDWS(200000, 25, 0.01)
-    #metrics = simulate(g, transmition_p, t_i, rand_seed=random.randint(0, int(10e6)))
-    #graph_metrics(metrics)
-    #graph_metrics(metrics, name='tmp-T3-log', scale='log')
-    
     test_diffrent_strategy(g)
 
-    exit()
-    import Utils
-    
-    #sc = Utils.find_strong_componets(g)
-    
-    #for s in sc:
-    #    print(f"Set of size: {len(s)}")
-
-    import Q4
-    nm = {k:f"N{k}" for k in g.keys()}
-    dc = Q4.degree_centrality(g)
-
-    print(f"Largest Degree: {Q4.get_best(dc, nm, top_count=5)}")
-    print(f"Smallest Degree: {Q4.get_best(dc, nm,smallest=True, top_count=5)}")
+   
    
 
 
