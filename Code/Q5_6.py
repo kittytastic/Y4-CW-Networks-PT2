@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from Utils import graph_subset
 from Q4 import closeness_centrality
 from graph_types import *
+import time
 
 Population = Dict['State', Set[Node]]
 Transitions = Dict[Tuple['State', 'State'], float]
@@ -67,6 +68,19 @@ def closeness_of_susceptible(g: Graph, pop: Population, num: int)->Set[Node]:
     closeness_l = list(closeness.items())
     return set(_take_best(closeness_l, lambda x: x[1], lambda x:x[0], num))
 
+def local_most_at_risk2(g: Graph, pop: Population, num:int)->Set[Node]:
+    i_neighbours = {n:0 for n in pop[State.S]}
+    all_infected = pop[State.I].union(pop[State.VI])
+    for i in all_infected:
+        #sn = g[i].intersection(pop[State.S])
+        #for n in sn:
+        #    i_neighbours[n]+=1
+        for n in g[i]:
+            if n in pop[State.S]:
+                i_neighbours[n]+=1
+
+    i_neighbours_l = list(i_neighbours.items())
+    return set(_take_best(i_neighbours_l, lambda x: x[1], lambda x: x[0], num))
 
 
 def simulate(
@@ -80,6 +94,8 @@ def simulate(
     )->Metrics:
     verify_prob_dict(t)
     random.seed(rand_seed)
+    start_t = time.time()
+    start_v = None
 
     metrics:Metrics = {s:[] for s in State} 
 
@@ -93,11 +109,18 @@ def simulate(
     infection_tracker:Dict[Node,int] = {p: ti for p in initial_infected}
     metrics = add_to_metrics(metrics, pop)
 
-    time=1
+    time_c=1
+    print("Day 1")
     while len(pop[State.I])>0 or len(pop[State.VI])>0:
+        if time_c%30==0:
+            print(f"Day: {time_c}")
+
         # Deal with new vaccines
-        if time>vaccines_start:    
+        if time_c>vaccines_start:
+            if start_v == None:
+                start_v = time.time()  
             to_vaccinate = vaccine_strategy(g, pop, 400)
+            assert(len(to_vaccinate)<=400)
             pop[State.S]-=to_vaccinate
             pop[State.V] = pop[State.V].union(to_vaccinate)
 
@@ -146,7 +169,19 @@ def simulate(
             infection_tracker[i] = ti
 
         metrics = add_to_metrics(metrics, pop)
-        time += 1
+        time_c += 1
+
+
+    end_t = time.time()
+    dt = end_t-start_t
+    if start_v:
+        v_rt = end_t-start_v
+    else:
+        v_rt = -1.0
+
+    print(f"Final day: {time_c}")
+    print(f"Runtime: {dt:.1f}s   ({v_rt:.1f}s in vaccine days)")
+    print(f"Rate: {1000*(dt)/time_c:.2f} ms/day    ({1000*v_rt/(time_c-vaccines_start):.1f} ms/day in vaccine days)")
 
     return metrics
 
@@ -177,10 +212,11 @@ def VDWS(n: int, m: int, rewire_prob: float, seed:Optional[int] = None)->Graph:
 
     g:Graph = {i:set() for i in range(n)}
     local_degrees = poisson(n,m)
+    #print(f"Max local degree: {max(local_degrees)}")
 
     edges_c = 0
     for i in range(n):
-        for j in range(-local_degrees[i], local_degrees[i]+1):
+        for j in range(i-local_degrees[i], i+local_degrees[i]+1):
             v = j % n
             if v==i:
                 continue
@@ -211,13 +247,17 @@ def VDWS(n: int, m: int, rewire_prob: float, seed:Optional[int] = None)->Graph:
                     rewire_skip +=1
     
     #print(f"Edges: {edges_c}  Rewire: {rewire_c} Rewire Skip: {rewire_skip}  ({100*rewire_c/edges_c:.4f})  p:{100*rewire_prob}")
+    #degrees = [len(v) for v in g.values()]
+    #print(f"Max degree: {max(degrees)}")
+    #print(f"Min degree: {min(degrees)}")
+    #print(f"Mean degree: {100*sum(degrees)/len(degrees):.1f}")
 
     return g
 
 def graph_metrics(metrics:Metrics, name:str="tmp-T3", scale:str='linear'):
     total_I = [metrics[State.I][i]+metrics[State.VI][i] for i in range(len(metrics[State.I]))]
 
-    fig, axs = plt.subplots(2, 3, sharex=True, sharey=True)
+    fig, axs = plt.subplots(2, 3, sharex=True, sharey='row')
     axs[0, 0].plot(metrics[State.S], 'tab:blue')
     axs[0, 0].set_title('Susceptible (S)')
     axs[0, 1].plot(metrics[State.V], 'tab:orange')
@@ -250,6 +290,25 @@ def seed_thrash():
         
         _ = VDWS(10, 1, 0.01)
 
+
+def test_diffrent_strategy(g:Graph):
+    transmition_p:Transitions = {
+            (State.I, State.S):0.01,
+            (State.I, State.V):0.005,
+            (State.VI, State.S):0.005,
+            (State.VI, State.V):0.005
+    }
+
+    t_i = 3
+    
+    strats = [(random_vaccine, "Random"), (global_most_at_risk, "Global"), (local_most_at_risk2, "Local 2"), (local_most_at_risk, "Local")]
+
+    for s, name in strats:
+        print(f"------  {name}  ------")
+        metrics = simulate(g, transmition_p, t_i, rand_seed=random.randint(0, int(10e6)), vaccine_strategy=s)
+        graph_metrics(metrics, name=f'Q6-{name}-lin')
+        graph_metrics(metrics, name=f'Q6-{name}-log', scale='log')
+
 if __name__ == "__main__":
     transmition_p:Transitions = {
             (State.I, State.S):0.01,
@@ -258,18 +317,29 @@ if __name__ == "__main__":
             (State.VI, State.V):0.01
     }
 
-    t_i = 2
+    t_i = 3
 
-    g = VDWS(20000, 25, 0.01)
-    metrics = simulate(g, transmition_p, t_i, rand_seed=random.randint(0, int(10e6)))
-    graph_metrics(metrics)
-    graph_metrics(metrics, name='tmp-T3-log', scale='log')
-    #import Utils
+    g = VDWS(200000, 25, 0.01)
+    #metrics = simulate(g, transmition_p, t_i, rand_seed=random.randint(0, int(10e6)))
+    #graph_metrics(metrics)
+    #graph_metrics(metrics, name='tmp-T3-log', scale='log')
+    
+    test_diffrent_strategy(g)
 
+    exit()
+    import Utils
+    
     #sc = Utils.find_strong_componets(g)
     
     #for s in sc:
     #    print(f"Set of size: {len(s)}")
+
+    import Q4
+    nm = {k:f"N{k}" for k in g.keys()}
+    dc = Q4.degree_centrality(g)
+
+    print(f"Largest Degree: {Q4.get_best(dc, nm, top_count=5)}")
+    print(f"Smallest Degree: {Q4.get_best(dc, nm,smallest=True, top_count=5)}")
    
 
 
