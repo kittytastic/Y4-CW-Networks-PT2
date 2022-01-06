@@ -1,6 +1,8 @@
 import unittest
+from unittest.mock import MagicMock
 import numpy as np
 from Q5_6 import *
+from Utils import edge_count
 
 class TestPoision(unittest.TestCase):
     def test_p_1(self):
@@ -208,6 +210,74 @@ class TestClosnessSusceptible(unittest.TestCase):
         #expected = {1: 1/28, 2: 1/28, 3: 1/28, 4:1/18, 5:1/28, 6:1/16, 7:1/24, 8:1/23, 9:1/23, 10:1/22, 11:1/22, 12:1/32}
         expected = {6, 4, 10, 11}
         self.assertEqual(expected, closeness_of_susceptible(in_g, in_pop, 4)) 
+
+class TestVDWSBase(unittest.TestCase):
+    def test_1(self):
+        n = 5
+        ld = [1,1,1,1,1]
+
+        excpected = {0: {4,1}, 1:{0,2}, 2:{1,3}, 3:{2,4}, 4:{3,0}}
+        self.assertEqual(excpected, VDWS_base(n, ld))
+    
+    def test_2(self):
+        n = 6
+        ld = [1,1,2,1,1,1]
+
+        excpected = {0: {5,1,2}, 1:{0,2}, 2:{0,1,3,4}, 3:{2,4}, 4:{2,3,5}, 5:{4,0}}
+        self.assertEqual(excpected, VDWS_base(n, ld))
+    
+    def test_3(self):
+        n = 7
+        ld = [3,1,1,1,1,1,1]
+
+        excpected = {0: {4,5,6,1,2,3}, 1:{0,2}, 2:{0,1,3}, 3:{0,2,4}, 4:{0,3,5}, 5:{0,4,6}, 6:{0,5,0}}
+        self.assertEqual(excpected, VDWS_base(n, ld))
+
+
+YES = 0.4
+NO = 0.6
+P = 0.5
+
+class TestVDWSRewire(unittest.TestCase):
+    def base_test(self, n:int, ld:List[int], p_rand:List[float], int_rand:List[int], excpected:Graph):
+        rng:random.Random = MagicMock(spec=random.Random)
+        rng.random.side_effect = p_rand #type:ignore
+        rng.randint.side_effect = int_rand #type: ignore
+      
+        g = VDWS_base(n, ld)
+
+        self.assertEqual(excpected, VDWS_rewire(g, n, P, ld, rng))
+        self.assertEqual(rng.random.call_count, edge_count(g)//2) #type:ignore
+        self.assertEqual(rng.randint.call_count, p_rand.count(YES)) #type:ignore
+
+    def test_1(self):
+        n = 5
+        ld = [1,1,1,1,1]
+        p_trial = [NO, NO, NO, NO, NO] 
+        int_trial:list[int] = [] 
+        excpected = {0: {4,1}, 1:{0,2}, 2:{1,3}, 3:{2,4}, 4:{3,0}}
+        
+        self.base_test(n,ld,p_trial,int_trial,excpected)
+    
+    def test_2(self):
+        n = 5
+        ld = [1,1,1,1,1]
+        p_trial = [NO, NO, YES, NO, NO] 
+        int_trial = [2] 
+
+        excpected = {0: {4,1}, 1:{0,2}, 2:{1,4}, 3:{4}, 4:{2,3,0}}
+
+        self.base_test(n,ld,p_trial,int_trial,excpected)
+    
+    def test_3(self):
+        n = 5
+        ld = [1,1,2,1,1]
+        p_trials = [NO, NO, NO, NO, NO, NO, NO]
+        int_trials:list[int] = []
+        
+        excpected = VDWS_base(n,ld)
+        
+        self.base_test(n, ld, p_trials, int_trials, excpected)
 
 if __name__ == '__main__':
     unittest.main()

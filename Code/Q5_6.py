@@ -255,6 +255,75 @@ def VDWS(n: int, m: int, rewire_prob: float, seed:Optional[int] = None)->Graph:
 
     return g
 
+def VDWS_base(n:int, local_degrees:List[int])->Graph:
+    assert(n==len(local_degrees))
+    g:Graph = {i: set() for i in range(n)}
+    for node in g:
+        for idx in range(1, local_degrees[node]+1):
+            f_neighbour = (node+idx)%n
+            g[node].add(f_neighbour)
+            g[f_neighbour].add(node)
+
+            b_neighbour = (node-idx)%n
+            g[node].add(b_neighbour)
+            g[b_neighbour].add(node)
+
+    return g
+
+
+
+def rewire_trial(g: Graph, n:int, p:float, node:Node, l:int, rng:random.Random)->Graph:
+    lower_offset = (n-1)//2
+    upper_offset = (n-1)-lower_offset
+    
+    curr_neighbour = (node+l)%n
+    print(f"Curr neighbour: {curr_neighbour}")
+    p_trial = rng.random()
+
+    if p_trial<p:
+        new_n_offset = rng.randint(-lower_offset, upper_offset)
+        new_n = (node+new_n_offset)%n
+        
+        print(f"Thinking bout rewiring: {node}  with offset: {new_n_offset}")
+        if new_n not in g[node]:
+            print(f"Offset is good")
+            g[node].remove(curr_neighbour)
+            g[curr_neighbour].remove(node)
+
+            g[node].add(new_n)
+            g[new_n].add(node)
+
+    return g
+
+
+def VDWS_rewire(g: Graph, n:int, p: float, local_degrees:List[int], rng:random.Random)->Graph:
+
+    for node in g:
+        for l in range(1, local_degrees[node]+1):
+            rewire_trial(g,n,p,node,l,rng)
+
+        for l in range(1, local_degrees[node]+1):
+            neighbour = (node-l)%n
+            if local_degrees[neighbour]<l:
+                print(f"Backwards trial {node}->{neighbour}")
+                rewire_trial(g,n,p,node,l,rng)
+
+
+    return g
+
+
+
+
+
+def VDWS_2(n:int,m:int,p:float)->Graph:
+    ld = poisson(n,m)
+    g = VDWS_base(n, ld)
+
+    rng = random.Random()
+    g = VDWS_rewire(g,n,p,ld,rng)
+
+    return g
+
 def graph_metrics(metrics:Metrics, name:str="tmp-T3", scale:str='linear'):
     total_I = [metrics[State.I][i]+metrics[State.VI][i] for i in range(len(metrics[State.I]))]
 

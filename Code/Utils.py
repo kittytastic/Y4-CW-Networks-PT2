@@ -128,3 +128,6 @@ def graph_subset(g: Graph, subset:Set[Node])->Graph:
     Returns the subgraph containing only a subset of nodes
     '''
     return {n: g[n].intersection(subset) for n in subset}
+
+def edge_count(g:Graph)->int:
+    return sum([len(s) for s in g.values()])
