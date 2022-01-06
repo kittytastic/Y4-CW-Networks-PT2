@@ -4,7 +4,7 @@ from enum import Enum
 import random
 import numpy as np
 import matplotlib.pyplot as plt
-from Utils import graph_subset
+from Utils import edge_count, graph_subset
 from Q4 import closeness_centrality
 from graph_types import *
 import time
@@ -272,55 +272,70 @@ def VDWS_base(n:int, local_degrees:List[int])->Graph:
 
 
 
-def rewire_trial(g: Graph, n:int, p:float, node:Node, l:int, rng:random.Random)->Graph:
+def rewire_trial(g: Graph, n:int, p:float, node:Node, neighbour:Node, l:int, rng:random.Random)->Tuple[Graph, bool]:
     lower_offset = (n-1)//2
     upper_offset = (n-1)-lower_offset
-    
-    curr_neighbour = (node+l)%n
-    print(f"Curr neighbour: {curr_neighbour}")
+
+    rewire = False 
+    #print(f"Edge {node}->{neighbour}   [{l}]")
     p_trial = rng.random()
 
     if p_trial<p:
         new_n_offset = rng.randint(-lower_offset, upper_offset)
         new_n = (node+new_n_offset)%n
         
-        print(f"Thinking bout rewiring: {node}  with offset: {new_n_offset}")
-        if new_n not in g[node]:
-            print(f"Offset is good")
-            g[node].remove(curr_neighbour)
-            g[curr_neighbour].remove(node)
+        #print(f"Thinking about rewiring: {node}->{new_n} [{new_n_offset}]")
+        if new_n not in g[node] and new_n!=node:
+            #print(f"Valid rewiring")
+            g[node].remove(neighbour)
+            g[neighbour].remove(node)
 
+            assert(node not in g[new_n])
+            assert(new_n not in g[node])
             g[node].add(new_n)
             g[new_n].add(node)
+            rewire = True
 
-    return g
+    return g, rewire
 
 
-def VDWS_rewire(g: Graph, n:int, p: float, local_degrees:List[int], rng:random.Random)->Graph:
-
+def VDWS_rewire(g: Graph, n:int, p: float, local_degrees:List[int], rng:random.Random)->Tuple[Graph, int]:
+    rewire_c = 0
     for node in g:
-        for l in range(1, local_degrees[node]+1):
-            rewire_trial(g,n,p,node,l,rng)
-
         for l in range(1, local_degrees[node]+1):
             neighbour = (node-l)%n
             if local_degrees[neighbour]<l:
-                print(f"Backwards trial {node}->{neighbour}")
-                rewire_trial(g,n,p,node,l,rng)
+                #print(f"Backwards trial {node}->{neighbour}")
+                g, rw = rewire_trial(g,n,p,node, neighbour, l,rng)
+                rewire_c += rw
+       
+        for l in range(1, local_degrees[node]+1):
+            neighbour = (node+l)%n
+            g, rw = rewire_trial(g,n,p,node, neighbour, l,rng)
+            rewire_c += rw
+
+    return g, rewire_c
 
 
-    return g
 
 
 
-
-
-def VDWS_2(n:int,m:int,p:float)->Graph:
+def VDWS_2(n:int,m:int,p:float, rnd_seed:Optional[int]=None)->Graph:
+    if rnd_seed is None:
+        rnd_seed = random.randrange(2**32 - 1)
+    rng = random.Random(rnd_seed)
+    np.random.seed(rnd_seed)
+    
     ld = poisson(n,m)
     g = VDWS_base(n, ld)
+    ec_1 = edge_count(g)
+    
+    g, rewire_c = VDWS_rewire(g,n,p,ld,rng)
+    ec_2 = edge_count(g)
 
-    rng = random.Random()
-    g = VDWS_rewire(g,n,p,ld,rng)
+    rewire_pc = float(rewire_c)/(float(ec_2)/2)
+    print(f"Rewired: {rewire_c}   ({rewire_pc:.3f})")
+    assert(ec_1==ec_2)
 
     return g
 

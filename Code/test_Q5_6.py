@@ -246,38 +246,77 @@ class TestVDWSRewire(unittest.TestCase):
       
         g = VDWS_base(n, ld)
 
-        self.assertEqual(excpected, VDWS_rewire(g, n, P, ld, rng))
+        return_g = VDWS_rewire(g, n, P, ld, rng)
+        self.assertEqual(excpected, return_g)
+        self.assertEqual(edge_count(g), edge_count(return_g))
         self.assertEqual(rng.random.call_count, edge_count(g)//2) #type:ignore
         self.assertEqual(rng.randint.call_count, p_rand.count(YES)) #type:ignore
 
-    def test_1(self):
-        n = 5
-        ld = [1,1,1,1,1]
-        p_trial = [NO, NO, NO, NO, NO] 
+    def test_1_do_nothing(self):
+        n = 100
+        ld = [1]*n
+        p_trial = [NO]*n 
         int_trial:list[int] = [] 
-        excpected = {0: {4,1}, 1:{0,2}, 2:{1,3}, 3:{2,4}, 4:{3,0}}
-        
+
+        excpected = VDWS_base(n,ld)
+
         self.base_test(n,ld,p_trial,int_trial,excpected)
     
     def test_2(self):
-        n = 5
-        ld = [1,1,1,1,1]
-        p_trial = [NO, NO, YES, NO, NO] 
-        int_trial = [2] 
-
-        excpected = {0: {4,1}, 1:{0,2}, 2:{1,4}, 3:{4}, 4:{2,3,0}}
+        n = 100
+        ld = [i for _ in range(n//5) for i in [1,1,3,1,1]]
+        excpected = VDWS_base(n,ld)
+        p_trial = [NO]*edge_count(excpected) 
+        int_trial:list[int] = [] 
 
         self.base_test(n,ld,p_trial,int_trial,excpected)
     
     def test_3(self):
-        n = 5
-        ld = [1,1,2,1,1]
-        p_trials = [NO, NO, NO, NO, NO, NO, NO]
-        int_trials:list[int] = []
+        n = 6
+        ld = [1,1,2,1,1,1]
+        p_trials = [NO, NO, NO, YES, NO, NO, NO, NO, NO]
+        int_trials:list[int] = [3]
         
-        excpected = VDWS_base(n,ld)
+        excpected = {0:{5,1,2}, 1:{0,2}, 2:{0,1,4,5}, 3:{4}, 4:{2,3,5}, 5:{2,4,0}}
         
         self.base_test(n, ld, p_trials, int_trials, excpected)
+    
+    def test_4(self):
+        n = 6
+        ld = [1,1,2,1,1,1]
+        p_trials = [NO, NO, NO, YES, NO, NO, NO, NO, NO]
+        int_trials:list[int] = [2]
+        
+        excpected = VDWS_base(n,ld) 
+        
+        self.base_test(n, ld, p_trials, int_trials, excpected)
+
+    def test_5(self):
+        n = 7
+        ld = [1,1,2,1,1,1,1]
+        p_trials = [NO, NO, YES, NO, NO, NO, NO, NO, NO]
+        int_trials:list[int] = [-3]
+        
+        excpected = {0:{6,1}, 1:{0,2}, 2:{6,1,3,4}, 3:{2,4}, 4:{2,3,5}, 5:{4,6}, 6:{5,0,2}}
+        
+        self.base_test(n, ld, p_trials, int_trials, excpected)
+
+    def test_6(self):
+        n = 7
+        ld = [1,1,2,1,1,1,1]
+        p_trials = [NO, NO, NO, YES, YES, NO, NO, NO, NO]
+        int_trials:list[int] = [3,3]
+        
+        excpected = {0:{6,1,2}, 1:{0,2}, 2:{0,1,4,5}, 3:{4}, 4:{2,3,5}, 5:{2,4,6}, 6:{5,0}}
+        
+        self.base_test(n, ld, p_trials, int_trials, excpected)
+
+class TestVDWS2(unittest.TestCase):
+    def test_1(self):
+        VDWS_2(7, 1, 1.0, rnd_seed=3567099385)
+    
+    def test_2(self):
+        VDWS_2(200_000, 1, 0.01)
 
 if __name__ == '__main__':
     unittest.main()
