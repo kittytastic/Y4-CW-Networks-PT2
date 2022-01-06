@@ -4,6 +4,7 @@ from enum import Enum
 import random
 import numpy as np
 import matplotlib.pyplot as plt
+from numpy.random.mtrand import seed
 from Utils import edge_count, graph_subset
 from Q4 import closeness_centrality
 from graph_types import *
@@ -247,11 +248,11 @@ def VDWS(n: int, m: int, rewire_prob: float, seed:Optional[int] = None)->Graph:
                 else:
                     rewire_skip +=1
     
-    #print(f"Edges: {edges_c}  Rewire: {rewire_c} Rewire Skip: {rewire_skip}  ({100*rewire_c/edges_c:.4f})  p:{100*rewire_prob}")
-    #degrees = [len(v) for v in g.values()]
-    #print(f"Max degree: {max(degrees)}")
-    #print(f"Min degree: {min(degrees)}")
-    #print(f"Mean degree: {100*sum(degrees)/len(degrees):.1f}")
+    print(f"Edges: {edges_c}  Rewire: {rewire_c} Rewire Skip: {rewire_skip}  ({100*rewire_c/edges_c:.4f})  p:{100*rewire_prob}")
+    degrees = [len(v) for v in g.values()]
+    print(f"Max degree: {max(degrees)}")
+    print(f"Min degree: {min(degrees)}")
+    print(f"Mean degree: {sum(degrees)/len(degrees):.1f}")
 
     return g
 
@@ -334,7 +335,12 @@ def VDWS_2(n:int,m:int,p:float, rnd_seed:Optional[int]=None)->Graph:
     ec_2 = edge_count(g)
 
     rewire_pc = float(rewire_c)/(float(ec_2)/2)
+    print(f"Edge count: {ec_2}")
     print(f"Rewired: {rewire_c}   ({rewire_pc:.3f})")
+    degrees = [len(v) for v in g.values()]
+    print(f"Max degree: {max(degrees)}")
+    print(f"Min degree: {min(degrees)}")
+    print(f"Mean degree: {sum(degrees)/len(degrees):.1f}")
     assert(ec_1==ec_2)
 
     return g
@@ -396,16 +402,11 @@ def test_diffrent_strategy(g:Graph):
         graph_metrics(metrics, name=f'Q6-{name}-log', scale='log')
 
 if __name__ == "__main__":
-    transmition_p:Transitions = {
-            (State.I, State.S):0.01,
-            (State.I, State.V):0.01,
-            (State.VI, State.S):0.01,
-            (State.VI, State.V):0.01
-    }
 
-    t_i = 4
-
-    g = VDWS(200000, 25, 0.01)
+    print("------  g  ------")
+    g = VDWS(200_000, 25, 0.01, seed=42)
+    print("------ g2 ------")
+    g = VDWS_2(200_000, 25, 0.01, rnd_seed=42)
     test_diffrent_strategy(g)
 
    
