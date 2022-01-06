@@ -1,5 +1,5 @@
 from typing import Iterable, List, Tuple, Set, Dict, Union
-from Utils import find_strong_componets
+from Utils import find_strong_componets, in_degree, out_degree, normalize_distribution, build_distribution
 from graph_types import *
 
 
@@ -36,7 +36,7 @@ def merge_nodes(g:Graph, merge_sets: List[Set[int]])-> Tuple[Graph, Dict[int, in
         cs_iter = iter(cs)
         new_node = next(cs_iter)
         for n in cs_iter:
-            new_g[new_node].union(g[n])
+            new_g[new_node] = new_g[new_node].union(g[n])
             new_g.pop(n, None)
 
             weight_dict[new_node] += 1
@@ -121,34 +121,6 @@ def largest_unilateral_strong_component(g:Graph):
     lp = longest_path(mg, weight_dict)
     largest_set = unmerge_nodes(lp, sc)
     return largest_set
-
-
-def in_degree(nodes:Set[int], g:Graph)->Dict[int,int]:
-    out_dict = {n:0 for n in nodes}
-    for n in nodes:
-        for m in nodes:
-            if n in g[m]:
-                out_dict[n]+=1
-
-    return out_dict
-
-def out_degree(nodes: Set[int], g:Graph)->Dict[int,int]:
-    return {n:len(g[n].intersection(nodes)) for n in nodes} 
-
-
-def build_distribution(observed: Dict[int,int])->Dict[int,int]:
-    out_dict:Dict[int,int] = {}
-    for c in observed.values():
-        if c in out_dict:
-            out_dict[c]+=1
-        else:
-            out_dict[c]=1
-
-    return out_dict
-
-def normalize_distribution(dist: Dict[int, int])->Dict[int, float]:
-    total = sum(dist.values())
-    return {k: v/total for k,v in dist.items()}
 
 
 def Q1():

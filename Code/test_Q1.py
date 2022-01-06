@@ -1,7 +1,7 @@
 import unittest
 from Q1 import *
 
-class TestLargestCCUndirected(unittest.TestCase):
+class TestLargestSCUndirected(unittest.TestCase):
    def test_dfs_1(self):
       in_g = {
          1: {2,3,4},
@@ -39,8 +39,8 @@ class TestLargestCCUndirected(unittest.TestCase):
       self.assertEqual(expected, largest_unilateral_strong_component(in_g))
 
 
-class TestLargestCCDirected(unittest.TestCase):
-   def test_lccd_1(self):
+class TestLargestSCDirected(unittest.TestCase):
+   def test_lscd_1(self):
       in_g:Graph = {
          1: set(),
          2: {1},
@@ -48,6 +48,19 @@ class TestLargestCCDirected(unittest.TestCase):
          4: set(),
       } 
       expected = {1,2,3}
+      self.assertEqual(expected, largest_unilateral_strong_component(in_g))
+   
+   def test_lscd_2(self):
+      in_g:Graph = {
+         1: {3},
+         2: {1},
+         3: {4},
+         4: {2,5},
+         5: {6,7},
+         6: set(),
+         7: {6}
+      } 
+      expected = {1,2,3,4,5,6,7}
       self.assertEqual(expected, largest_unilateral_strong_component(in_g))
 
 class TestFSC(unittest.TestCase):
@@ -79,6 +92,21 @@ class TestMergeNodes(unittest.TestCase):
       mn = [{5,6,7}, {1,2,3,4}]
       expected_n = {1:{1}, 5:{5}}
       expected_w = {1: 4, 5:3}
+      self.assertEqual((expected_n, expected_w), merge_nodes(in_g, mn))
+   
+   def test_mn_2(self):
+      in_g:Graph = {
+         1: {3},
+         2: {1},
+         3: {4},
+         4: {2,5},
+         5: {6,7},
+         6: set(),
+         7: {6}
+      } 
+      mn = [{1,2,3,4}, {5}, {6}, {7}]
+      expected_n:Dict[Node, Set[Node]] = {1:{1,5}, 5:{6,7}, 6:set(), 7:{6}}
+      expected_w = {1: 4, 5:1, 6:1, 7:1}
       self.assertEqual((expected_n, expected_w), merge_nodes(in_g, mn))
 
 class TestRemoveSelfCycles(unittest.TestCase):
@@ -191,56 +219,7 @@ class TestLongestPathForwardPass(unittest.TestCase):
       self.assertEqual(expected_w, ow)
       self.assertEqual(expected_bt, obt)
 
-class TestInDegree(unittest.TestCase):
-   def test_id_1(self):
-      in_g = {
-         1: {1,3,4},
-         2: {1},
-         3: {1},
-         4: {1},
-         5: {6,7},
-         6: {5,7},
-         7: {5,6}
-      } 
-      n = {1,2,  5,7}
-      expected = {1:2, 2:0, 5:1, 7:1}
-      self.assertEqual(expected, in_degree(n, in_g))
 
-class TestOutDegree(unittest.TestCase):
-   def test_od_1(self):
-      in_g = {
-         1: {1,3,4},
-         2: {1,3},
-         3: {1},
-         4: {1},
-         5: {6,7},
-         6: {5,7},
-         7: {5,6}
-      } 
-      n = {1,2,  5,7}
-      expected = {1:1, 2:1, 5:1, 7:1}
-      self.assertEqual(expected, out_degree(n, in_g))
-
-
-class TestBuildDist(unittest.TestCase):
-   def test_bd_1(self):
-      in_d = {
-         1: 5,
-         2: 3,
-         3: 5,
-         4: 1,
-         5: 2,
-         6: 5,
-         7: 12
-      } 
-      expected = {1:1, 2:1, 3:1, 5:3, 12:1}
-      self.assertEqual(expected, build_distribution(in_d))
-
-class TestNormalizeDist(unittest.TestCase):
-   def test_bd_1(self):
-      in_d = {1:1, 2:2, 3:1, 5:3, 12:3} 
-      expected = {1:0.1, 2:0.2, 3:0.1, 5:0.3, 12:0.3}
-      self.assertEqual(expected, normalize_distribution(in_d))
 
 
 
