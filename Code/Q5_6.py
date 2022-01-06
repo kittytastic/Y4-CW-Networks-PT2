@@ -4,8 +4,7 @@ from enum import Enum
 import random
 import numpy as np
 import matplotlib.pyplot as plt
-from Utils import edge_count, graph_subset
-from Q4 import closeness_centrality
+from Utils import edge_count
 from graph_types import *
 import time
 
@@ -49,12 +48,6 @@ def global_most_at_risk(g: Graph, pop: Population, num: int)->Set[Node]:
     degree = [(n, len(g[n])) for n in pop[State.S]]
     return set(_take_best(degree, lambda x: x[1], lambda x: x[0], num))
     
-def closeness_of_susceptible(g: Graph, pop: Population, num: int)->Set[Node]:
-    sub_graph = graph_subset(g, pop[State.S])
-    closeness = closeness_centrality(sub_graph)
-    closeness_l = list(closeness.items())
-    return set(_take_best(closeness_l, lambda x: x[1], lambda x:x[0], num))
-
 def local_most_at_risk(g: Graph, pop: Population, num:int)->Set[Node]:
     i_neighbours = {n:0 for n in pop[State.S]}
     all_infected = pop[State.I].union(pop[State.VI])
