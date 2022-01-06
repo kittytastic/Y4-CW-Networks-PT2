@@ -4,12 +4,12 @@ from enum import Enum
 import random
 import numpy as np
 import matplotlib.pyplot as plt
-from numpy.random.mtrand import seed
 from Utils import edge_count, graph_subset
 from Q4 import closeness_centrality
 from graph_types import *
 import time
 
+############################ Datastructures #############################
 Population = Dict['State', Set[Node]]
 Transitions = Dict[Tuple['State', 'State'], float]
 Metrics = Dict['State', List[int]]
@@ -35,12 +35,8 @@ def verify_prob_dict(t: Transitions):
     if set(t.keys())!=REQUIRED_KEYS:
         raise Exception(f"Prob dict doesn't contain required keys\nRequired: {REQUIRED_KEYS}\nObserved: {set(t)}")
 
-def add_to_metrics(m: Metrics, pop: Population)->Metrics:
-    for s in State:
-        m[s].append(len(pop[s]))
-    
-    return m
 
+############################ Vaccine Strategies ##############################
 def _take_best(in_l: List[_T], key: Callable[[_T], Union[int, float]], val: Callable[[_T], _S], num: int, largest:bool = True)->List[_S]:
     sorted_l = sorted(in_l, key=key, reverse=largest)
     top_l = sorted_l[:min(len(sorted_l), num)]
@@ -84,6 +80,7 @@ def local_most_at_risk_2_step(g: Graph, pop: Population, num:int)->Set[Node]:
     s1_risk = list(s1_risk.items())
     return set(_take_best(s1_risk, lambda x: x[1], lambda x: x[0], num))
 
+########################## Simulation ##############################
 def simulate(
     g:Graph,
     t: Transitions,
@@ -187,6 +184,15 @@ def simulate(
 
     return metrics
 
+
+def add_to_metrics(m: Metrics, pop: Population)->Metrics:
+    for s in State:
+        m[s].append(len(pop[s]))
+    
+    return m
+
+
+########################## VDWS ##############################
 def poisson(n: int, m: int)->List[int]:
     dist:Any = np.zeros(n, dtype='int') #type:ignore
 
@@ -198,63 +204,6 @@ def poisson(n: int, m: int)->List[int]:
         filled+=len(new_dist)
 
     return list(dist)
-
-def is_anticlockwise(num_nodes:Node, cur_node:Node, query_node: Node):
-    cn_shift = cur_node+num_nodes
-    qn_shift = query_node+num_nodes
-    lb = cn_shift-num_nodes//2
-
-    return (qn_shift>lb and qn_shift<cn_shift) or (query_node>lb and query_node<cn_shift)
-
-def VDWS(n: int, m: int, rewire_prob: float, seed:Optional[int] = None)->Graph:
-    if seed is None:
-        seed = random.randrange(2**32 - 1)
-    rng = random.Random(seed)
-    np.random.seed(seed)
-
-    g:Graph = {i:set() for i in range(n)}
-    local_degrees = poisson(n,m)
-    #print(f"Max local degree: {max(local_degrees)}")
-
-    edges_c = 0
-    for i in range(n):
-        for j in range(i-local_degrees[i], i+local_degrees[i]+1):
-            v = j % n
-            if v==i:
-                continue
-            edges_c +=1
-            g[i].add(v)
-            g[v].add(i)
-
-    rewire_c  = 0
-    rewire_skip = 0
-    rewired_edges:Set[Tuple[Node, Node]] = set()
-    for i in range(n):
-        for j in g[i]:
-            if (i,j) in rewired_edges or is_anticlockwise(n, i, j):
-                continue
-                
-            p = rng.random()
-            if p < rewire_prob:
-                v = rng.randint(0,n-1)
-                if v!=i and v not in g[i]:
-                    g[i].remove(j)
-                    g[j].remove(i) 
-                    g[i].add(v)
-                    g[v].add(i)
-                    rewired_edges.add((i,v))
-                    rewired_edges.add((v,i))
-                    rewire_c +=1
-                else:
-                    rewire_skip +=1
-    
-    print(f"Edges: {edges_c}  Rewire: {rewire_c} Rewire Skip: {rewire_skip}  ({100*rewire_c/edges_c:.4f})  p:{100*rewire_prob}")
-    degrees = [len(v) for v in g.values()]
-    print(f"Max degree: {max(degrees)}")
-    print(f"Min degree: {min(degrees)}")
-    print(f"Mean degree: {sum(degrees)/len(degrees):.1f}")
-
-    return g
 
 def VDWS_base(n:int, local_degrees:List[int])->Graph:
     assert(n==len(local_degrees))
@@ -270,8 +219,6 @@ def VDWS_base(n:int, local_degrees:List[int])->Graph:
             g[b_neighbour].add(node)
 
     return g
-
-
 
 def rewire_trial(g: Graph, n:int, p:float, node:Node, neighbour:Node, l:int, rng:random.Random)->Tuple[Graph, bool]:
     lower_offset = (n-1)//2
@@ -318,10 +265,7 @@ def VDWS_rewire(g: Graph, n:int, p: float, local_degrees:List[int], rng:random.R
     return g, rewire_c
 
 
-
-
-
-def VDWS_2(n:int,m:int,p:float, rnd_seed:Optional[int]=None)->Graph:
+def VDWS(n:int,m:int,p:float, rnd_seed:Optional[int]=None, debug:bool = False)->Graph:
     if rnd_seed is None:
         rnd_seed = random.randrange(2**32 - 1)
     rng = random.Random(rnd_seed)
@@ -329,22 +273,24 @@ def VDWS_2(n:int,m:int,p:float, rnd_seed:Optional[int]=None)->Graph:
     
     ld = poisson(n,m)
     g = VDWS_base(n, ld)
-    ec_1 = edge_count(g)
-    
+    ec_1 = edge_count(g)    
     g, rewire_c = VDWS_rewire(g,n,p,ld,rng)
     ec_2 = edge_count(g)
 
-    rewire_pc = float(rewire_c)/(float(ec_2)/2)
-    print(f"Edge count: {ec_2}")
-    print(f"Rewired: {rewire_c}   ({rewire_pc:.3f})")
-    degrees = [len(v) for v in g.values()]
-    print(f"Max degree: {max(degrees)}")
-    print(f"Min degree: {min(degrees)}")
-    print(f"Mean degree: {sum(degrees)/len(degrees):.1f}")
     assert(ec_1==ec_2)
+    
+    if debug:
+        rewire_pc = float(rewire_c)/(float(ec_2)/2)
+        print(f"Edge count: {ec_2}")
+        print(f"Rewired: {rewire_c}   ({rewire_pc:.3f})")
+        degrees = [len(v) for v in g.values()]
+        print(f"Max degree: {max(degrees)}")
+        print(f"Min degree: {min(degrees)}")
+        print(f"Mean degree: {sum(degrees)/len(degrees):.1f}")
 
     return g
 
+########################## Trials and Metrics ##############################
 def graph_metrics(metrics:Metrics, name:str="tmp-T3", scale:str='linear'):
     total_I = [metrics[State.I][i]+metrics[State.VI][i] for i in range(len(metrics[State.I]))]
 
@@ -372,16 +318,6 @@ def graph_metrics(metrics:Metrics, name:str="tmp-T3", scale:str='linear'):
     plt.savefig(f'Artifacts/{name}.png')
 
 
-def seed_thrash():
-    to = 1000000
-    step = to/100
-    for i in range(to):
-        if i%step==0:
-            print(f"{i}/{to} ({i*100/to}%)")
-        
-        _ = VDWS(10, 1, 0.01)
-
-
 def test_diffrent_strategy(g:Graph):
     transmition_p:Transitions = {
             (State.I, State.S):0.01,
@@ -402,11 +338,7 @@ def test_diffrent_strategy(g:Graph):
         graph_metrics(metrics, name=f'Q6-{name}-log', scale='log')
 
 if __name__ == "__main__":
-
-    print("------  g  ------")
-    g = VDWS(200_000, 25, 0.01, seed=42)
-    print("------ g2 ------")
-    g = VDWS_2(200_000, 25, 0.01, rnd_seed=42)
+    g = VDWS(200_000, 25, 0.01, rnd_seed=42)
     test_diffrent_strategy(g)
 
    

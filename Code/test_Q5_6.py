@@ -29,7 +29,7 @@ class TestVDWS(unittest.TestCase):
         p = 0.01
         seed = 239781413
 
-        VDWS(n,m, p, seed=seed)
+        VDWS(n,m, p, rnd_seed=seed)
 
     def test_p_2(self):
         n = 10 
@@ -37,7 +37,7 @@ class TestVDWS(unittest.TestCase):
         p = 0.01
         seed = 3902944517
 
-        VDWS(n,m, p, seed=seed)
+        VDWS(n,m, p, rnd_seed=seed)
     
     def test_p_3(self):
         n = 20 
@@ -45,7 +45,7 @@ class TestVDWS(unittest.TestCase):
         p = 0.01
         seed = 1045711233
 
-        VDWS(n,m, p, seed=seed)
+        VDWS(n,m, p, rnd_seed=seed)
     
     def test_p_4(self):
         n = 2000 
@@ -53,7 +53,7 @@ class TestVDWS(unittest.TestCase):
         p = 0.01
         seed = 1868584733 
 
-        VDWS(n,m, p, seed=seed)
+        VDWS(n,m, p, rnd_seed=seed)
     
     def test_p_5(self):
         n = 10
@@ -61,7 +61,7 @@ class TestVDWS(unittest.TestCase):
         p = 0.01
         seed = 2540674012 
 
-        VDWS(n,m, p, seed=seed)
+        VDWS(n,m, p, rnd_seed=seed)
     
     def test_p_6(self):
         n = 10
@@ -69,7 +69,13 @@ class TestVDWS(unittest.TestCase):
         p = 1
         seed = 2540674012 
 
-        VDWS(n,m, p, seed=seed)
+        VDWS(n,m, p, rnd_seed=seed)
+    
+    def test_1(self):
+        VDWS(7, 1, 1.0, rnd_seed=3567099385)
+    
+    def test_2(self):
+        VDWS(200_000, 25, 0.01)
 
 class TestSIM(unittest.TestCase):
     def xtest_sim_1(self):
@@ -81,7 +87,7 @@ class TestSIM(unittest.TestCase):
         }   
 
         t_i = 2
-        g = VDWS(20, 5, 0.01, seed=42)
+        g = VDWS(20, 5, 0.01, rnd_seed=42)
 
         metrics = simulate(g, transmition_p, t_i)
         self.assertEqual(len(metrics[State.I]), 2)
@@ -95,21 +101,11 @@ class TestSIM(unittest.TestCase):
         }   
 
         t_i = 2
-        g = VDWS(20, 5, 0.01, seed=42)
+        g = VDWS(20, 5, 0.01, rnd_seed=42)
 
         metrics = simulate(g, transmition_p, t_i)
         self.assertEqual(metrics[State.R][-1], 20)
 
-class TestIsAnticlockwise(unittest.TestCase):
-    def test_ac_1(self):
-        self.assertTrue(is_anticlockwise(8, 1, 7))
-        self.assertTrue(is_anticlockwise(8, 0, 6))
-        self.assertTrue(is_anticlockwise(8, 7, 5))
-
-    def test_ac_2(self):
-        self.assertFalse(is_anticlockwise(8, 7, 1))
-        self.assertFalse(is_anticlockwise(8, 6, 0))
-        self.assertFalse(is_anticlockwise(8, 5, 7))
 
 class TestGlobalMostAtRisk(unittest.TestCase):
    def test_gmar_1(self):
@@ -189,28 +185,6 @@ class TestLocalMostAtRiskWeighted(unittest.TestCase):
 
       self.assertEqual(expected, local_most_at_risk(in_g, in_pop, 2))
 
-class TestClosnessSusceptible(unittest.TestCase):
-    def test_cc_2(self):
-        in_g = {
-         1: {4},
-         2: {4},
-         3: {4},
-         4: {1,2,3,5,6},
-         5: {4},
-         6: {4,7,8,9,10, 11},
-         7: {6, 8, 11},
-         8: {6, 7, 9, 11},
-         9: {6,8,10},
-         10: {6, 9, 11, 12},
-         11: {6, 7, 8, 10},
-         12: {10},
-         13: {1,2,3,4,5,6,7,8,9}
-        } 
-        in_pop = {State.S: set(range(1,13)), State.I: {13}}
-        #expected = {1: 1/28, 2: 1/28, 3: 1/28, 4:1/18, 5:1/28, 6:1/16, 7:1/24, 8:1/23, 9:1/23, 10:1/22, 11:1/22, 12:1/32}
-        expected = {6, 4, 10, 11}
-        self.assertEqual(expected, closeness_of_susceptible(in_g, in_pop, 4)) 
-
 class TestVDWSBase(unittest.TestCase):
     def test_1(self):
         n = 5
@@ -246,7 +220,7 @@ class TestVDWSRewire(unittest.TestCase):
       
         g = VDWS_base(n, ld)
 
-        return_g = VDWS_rewire(g, n, P, ld, rng)
+        return_g, _ = VDWS_rewire(g, n, P, ld, rng)
         self.assertEqual(excpected, return_g)
         self.assertEqual(edge_count(g), edge_count(return_g))
         self.assertEqual(rng.random.call_count, edge_count(g)//2) #type:ignore
@@ -311,12 +285,6 @@ class TestVDWSRewire(unittest.TestCase):
         
         self.base_test(n, ld, p_trials, int_trials, excpected)
 
-class TestVDWS2(unittest.TestCase):
-    def test_1(self):
-        VDWS_2(7, 1, 1.0, rnd_seed=3567099385)
-    
-    def test_2(self):
-        VDWS_2(200_000, 1, 0.01)
 
 if __name__ == '__main__':
     unittest.main()
