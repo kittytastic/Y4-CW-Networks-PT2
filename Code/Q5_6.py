@@ -355,23 +355,57 @@ def graph_metrics_overlay(metrics_list:List[Metrics], metric_labels: List[str], 
     plt.savefig(f'Artifacts/{name}.png')
 
 def test_diffrent_strategy(g:Graph):
-    transmition_p:Transitions = {
+    sf = 0.5
+    vaccineA:Transitions = {
             (State.I, State.S):0.01,
-            (State.I, State.V):0.005,
-            (State.VI, State.S):0.005,
-            (State.VI, State.V):0.005
+            (State.I, State.V):0.01,
+            (State.VI, State.S):0.01,
+            (State.VI, State.V):0.01
+    }
+    
+    vaccineB:Transitions = {
+            (State.I, State.S):0.01,
+            (State.I, State.V):0.01,
+            (State.VI, State.S):0.01*sf,
+            (State.VI, State.V):0.01*sf
     }
 
+    vaccineC:Transitions = {
+            (State.I, State.S):0.01,
+            (State.I, State.V):0.01*sf,
+            (State.VI, State.S):0.01,
+            (State.VI, State.V):0.01*sf
+    }
+
+    vaccineD:Transitions = {
+            (State.I, State.S):0.01,
+            (State.I, State.V):0.01*sf,
+            (State.VI, State.S):0.01*sf,
+            (State.VI, State.V):0.01*sf*sf
+    }   
+
     t_i = 3
+    v_probs:List[Tuple[Transitions, str, str]] = [
+        (vaccineA, "ineffective", "none"),
+        (vaccineB, "lower transmission", "transmit"),
+        (vaccineC, "lower susceptibility", "catch"),
+        (vaccineD, "lower both", "both")
+        ]
     
-    strats = [(random_vaccine, "Random"), (global_most_at_risk, "Global"), (local_most_at_risk, "Local"), (local_most_at_risk_2_step, "Local - 2 step")]
+    strats = [(random_vaccine, "Random"), (global_most_at_risk, "Global"), (local_most_at_risk, "Local"), (local_most_at_risk_2_step, "Local (2 step)")]
 
     rs = random.randint(0, int(10e6))
-    for s, name in strats:
-        print(f"------  {name}  ------")
-        metrics = simulate(g, transmition_p, t_i, rand_seed=rs, vaccine_strategy=s)
-        graph_metrics(metrics, name=f'Q6-{name}-lin')
-        graph_metrics(metrics, name=f'Q6-{name}-log', scale='log')
+    for vs, ln, sn in v_probs:
+        metrics_list:List[Metrics] = []
+        labels: List[str] = []
+        for s, name in strats:
+            print(f"------  {ln}: {name}  ------")
+            metrics = simulate(g, vs, t_i, rand_seed=rs, vaccine_strategy=s)
+            metrics_list.append(metrics)
+            labels.append(name)
+
+        graph_metrics_overlay(metrics_list, labels, name=f'Q6-{sn}', title=f"Vaccine effectiveness: {ln}")
+
 
 def test_diffrent_probs(g:Graph):
     sf = 0.5
@@ -429,8 +463,7 @@ if __name__ == "__main__":
 
     print("############ Q5 ############")
     test_diffrent_probs(g)
-    exit()
-    print("------- Q6 ------")
+    print("############ Q6 ############")
     test_diffrent_strategy(g)
 
    
