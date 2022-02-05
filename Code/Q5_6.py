@@ -1,4 +1,5 @@
 
+from cProfile import label
 from typing import Callable, List, Optional, Tuple, Set, Dict, TypeVar, Union, Any
 from enum import Enum
 import random
@@ -284,7 +285,7 @@ def VDWS(n:int,m:int,p:float, rnd_seed:Optional[int]=None, debug:bool = False)->
     return g
 
 ########################## Trials and Metrics ##############################
-def graph_metrics(metrics:Metrics, name:str="tmp-T3", scale:str='linear'):
+def graph_metrics(metrics:Metrics, name:str="tmp-T3", scale:str='linear', title:Optional[str]=None):
     total_I = [metrics[State.I][i]+metrics[State.VI][i] for i in range(len(metrics[State.I]))]
 
     fig, axs = plt.subplots(2, 3, sharex=True, sharey='row')
@@ -308,8 +309,50 @@ def graph_metrics(metrics:Metrics, name:str="tmp-T3", scale:str='linear'):
     fig.supxlabel('Simulation Steps')
     fig.supylabel('Number of People')
 
+    if title is not None:
+        fig.suptitle(title)
+
     plt.savefig(f'Artifacts/{name}.png')
 
+
+def graph_metrics_overlay(metrics_list:List[Metrics], metric_labels: List[str], name:str="tmp-T3", scale:str='linear', title:Optional[str]=None):
+
+    fig, axs = plt.subplots(2, 3, sharex=True, sharey='row')
+    axs[0, 0].set_title('Susceptible (S)')
+
+    axs[0, 1].set_title('Vaccinated (V)')
+    axs[0, 2].set_title('Recovered (R)')
+    
+    axs[1, 0].set_title('Infected (I)')
+    axs[1, 1].set_title('Vacinated & Infected (VI)')
+    axs[1, 2].set_title('Total Infected (I+VI)')
+
+    cols = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red'] 
+    for metrics, lab, col in zip(metrics_list, metric_labels,  cols):
+        total_I = [metrics[State.I][i]+metrics[State.VI][i] for i in range(len(metrics[State.I]))]
+        axs[0, 0].plot(metrics[State.S], color=col, label=lab)
+        axs[0, 1].plot(metrics[State.V], color=col, label=lab)
+        axs[0, 2].plot(metrics[State.R], color=col, label=lab)
+        axs[1, 0].plot(metrics[State.I], color=col, label=lab)
+        axs[1, 1].plot(metrics[State.VI], color=col, label=lab)
+        axs[1, 2].plot(total_I, color=col, label=lab)
+
+    
+    axs[0, 0].legend(loc="upper right")
+    for ax in axs.flat:
+        ax.set_yscale(scale)
+
+    fig.supxlabel('Simulation Steps')
+    fig.supylabel('Number of People')
+
+    if title is not None:
+        fig.suptitle(title)
+
+
+    sf = 0.75
+    fig.set_size_inches(18.5*sf, 10.5*sf)
+    fig.set_dpi(160)
+    plt.savefig(f'Artifacts/{name}.png')
 
 def test_diffrent_strategy(g:Graph):
     transmition_p:Transitions = {
@@ -330,8 +373,64 @@ def test_diffrent_strategy(g:Graph):
         graph_metrics(metrics, name=f'Q6-{name}-lin')
         graph_metrics(metrics, name=f'Q6-{name}-log', scale='log')
 
+def test_diffrent_probs(g:Graph):
+    sf = 0.5
+
+    vaccineA:Transitions = {
+            (State.I, State.S):0.01,
+            (State.I, State.V):0.01,
+            (State.VI, State.S):0.01,
+            (State.VI, State.V):0.01
+    }
+    
+    vaccineB:Transitions = {
+            (State.I, State.S):0.01,
+            (State.I, State.V):0.01,
+            (State.VI, State.S):0.01*sf,
+            (State.VI, State.V):0.01*sf
+    }
+
+    vaccineC:Transitions = {
+            (State.I, State.S):0.01,
+            (State.I, State.V):0.01*sf,
+            (State.VI, State.S):0.01,
+            (State.VI, State.V):0.01*sf
+    }
+
+    vaccineD:Transitions = {
+            (State.I, State.S):0.01,
+            (State.I, State.V):0.01*sf,
+            (State.VI, State.S):0.01*sf,
+            (State.VI, State.V):0.01*sf*sf
+    }   
+
+    t_i = 3
+    strats = [
+        (vaccineA, "ineffective", "none"),
+        (vaccineB, "lower transmission", "transmit"),
+        (vaccineC, "lower susceptibility", "catch"),
+        (vaccineD, "lower both", "both")
+        ]
+
+    rs = random.randint(0, int(10e6))
+    metrics_list: List[Metrics] = []
+    labels: List[str] = [] 
+    for ps, name, lab in strats:
+        print(f"------  {name}  ------")
+        metrics = simulate(g, ps, t_i, rand_seed=rs, vaccine_strategy=random_vaccine)
+        metrics_list.append(metrics)
+        labels.append(lab)
+        #graph_metrics(metrics, name=f'Q5-{fn}-log', scale='log', title=f"Vaccine effectiveness: {name}; Vaccine Strategy: random (log scale)")
+    
+    graph_metrics_overlay(metrics_list, labels, name=f'Q5', title=f"Diffrent levels of vaccine effectiveness with a random strategy")
+
 if __name__ == "__main__":
     g = VDWS(200_000, 25, 0.01, rnd_seed=42)
+
+    print("############ Q5 ############")
+    test_diffrent_probs(g)
+    exit()
+    print("------- Q6 ------")
     test_diffrent_strategy(g)
 
    
