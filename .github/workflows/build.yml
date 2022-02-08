@@ -15,9 +15,14 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      Target_Name: qwrx21-networks
+      Target_Name: qwrx21-network-science
       Files: ${{ join(fromJSON('[
-        "Code/Int_Nets_routing_qwrx21.py",
+        "Code/graph_types.py",
+        "Code/Q1.py",
+        "Code/Q2.py",
+        "Code/Q3.py",
+        "Code/Q4.py",
+        "Code/Q5_6.py",
         ]'), ' ') }}
 
     steps:
@@ -56,7 +61,7 @@ jobs:
           root_file: Answers.tex
 
       - name: Copy Data Report 
-        run:  cp Report/Answers.pdf ./tmp/Int_Nets_text_qwrx21.pdf
+        run:  cp Report/Answers.pdf ./tmp/Answers.pdf
       
 
       # ZIP final solution
