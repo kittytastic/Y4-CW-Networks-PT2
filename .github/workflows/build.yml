@@ -48,9 +48,9 @@ jobs:
         working-directory: ./tmp
 
       # TEST  
-      - name: Test Solution
-        run: python -m unittest
-        working-directory: ./Code
+      #- name: Test Solution
+      #  run: python -m unittest
+      #  working-directory: ./Code
       
       # LATEX
       - name: Build Latex
