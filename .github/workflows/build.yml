@@ -20,7 +20,6 @@ jobs:
         "Code/graph_types.py",
         "Code/Q1.py",
         "Code/Q2.py",
-        "Code/Q3.py",
         "Code/Q4.py",
         "Code/Q5_6.py",
         ]'), ' ') }}
