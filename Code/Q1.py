@@ -1,3 +1,9 @@
+####################################
+# USEAGE:
+# make the directory: ./Artifacts
+# run: python Q1.py
+####################################
+
 from typing import Iterable, List, Tuple, Set, Dict, Union
 from Utils import find_strong_componets, in_degree, out_degree, normalize_distribution, build_distribution
 from graph_types import *

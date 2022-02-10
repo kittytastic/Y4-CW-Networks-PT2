@@ -1,3 +1,11 @@
+####################################
+# USEAGE:
+# make the directory: ./Artifacts
+# install the additional packages:
+#       pip install scipy tabulate    
+# run: python Q4.py
+####################################
+
 from typing import Callable, List, Tuple, Set, Dict, Union, Any
 
 from tabulate import tabulate
@@ -270,7 +278,7 @@ def spear_rank(a: Dict[Node, Union[int, float]], b: Dict[Node, Union[int, float]
     a_ranked = [a_rank_map[n] for n in nodes]
     b_ranked = [b_rank_map[n] for n in nodes]
 
-    return spearmanr(a_ranked, b_ranked)[0]
+    return spearmanr(a_ranked, b_ranked)[0] # type: ignore
 
 
 def Q4_additional():

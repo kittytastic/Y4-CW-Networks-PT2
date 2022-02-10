@@ -1,5 +1,9 @@
 
-from cProfile import label
+####################################
+# USEAGE:
+# make the directory: ./Artifacts
+# run: python Q5_6.py
+####################################
 from typing import Callable, List, Optional, Tuple, Set, Dict, TypeVar, Union, Any
 from enum import Enum
 import random

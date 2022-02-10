@@ -1,3 +1,9 @@
+####################################
+# USEAGE:
+# make the directory: ./Artifacts
+# run: python Q2.py
+####################################
+
 from typing import Set
 from graph_types import *
 import random

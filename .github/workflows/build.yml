@@ -22,6 +22,7 @@ jobs:
         "Code/Q2.py",
         "Code/Q4.py",
         "Code/Q5_6.py",
+        "Code/Utils.py",
         ]'), ' ') }}
 
     steps:
